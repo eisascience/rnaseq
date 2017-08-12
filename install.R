@@ -1,4 +1,4 @@
-list.of.packages <- c('digest', 'plyr', 'perm', 'reshape', 'reshape2', 'knitr', 'ggplot2', 'Rcpp', 'lattice', 'tidyverse', 'stringr', 'edgeR', 'gplots', 'WGCNA')
+list.of.packages <- c('digest', 'plyr', 'perm', 'reshape', 'reshape2', 'knitr', 'ggplot2', 'Rcpp', 'lattice', 'tidyverse', 'stringr', 'edgeR', 'gplots', 'pheatmap', 'WGCNA')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)){
 	install.packages(new.packages, dependencies=TRUE, repos='http://cran.rstudio.com')
@@ -15,3 +15,4 @@ biocLite("edgeR", ask=FALSE)
 biocLite("glmQLFit", ask=FALSE)
 biocLite("statmod", ask=FALSE)
 biocLite("biomaRt", ask=FALSE)
+biocLite("sva", ask=FALSE)
