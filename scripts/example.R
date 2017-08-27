@@ -14,7 +14,11 @@ metaUnfilter <- prepareMetadataTable(fullMetadata, allowableIdsTable$OutputFileI
 geneCountMatrix <- parseGeneCountsMatrix(geneCountTableFile, as.character(metaUnfilter$OutputFileId))
 metaUnfilter <- prepareMetadataTable2(metaUnfilter, geneCountMatrix)
 
-designFormula <- as.formula(' ~ AnimalId + GroupCol')
+if(!exists('designF'){
+	designF = ' ~ AnimalId + GroupCol'
+}
+
+designFormula <- as.formula(designF)
 coefs <- length(colnames(design))
 contrast <- c(groupColName, levels(metaUnfilter$GroupCol)[nlevels(metaUnfilter$GroupCol)], levels(metaUnfilter$GroupCol)[1])
 

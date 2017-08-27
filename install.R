@@ -1,4 +1,4 @@
-list.of.packages <- c('digest', 'plyr', 'perm', 'reshape', 'reshape2', 'knitr', 'ggplot2', 'Rcpp', 'lattice', 'tidyverse', 'stringr', 'edgeR', 'gplots', 'pheatmap', 'WGCNA', 'Rtsne')
+list.of.packages <- c('digest', 'plyr', 'perm', 'reshape', 'reshape2', 'knitr', 'ggplot2', 'Rcpp', 'lattice', 'tidyverse', 'stringr', 'edgeR', 'gplots', 'pheatmap', 'Rtsne')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)){
 	install.packages(new.packages, dependencies=TRUE, repos='http://cran.rstudio.com')
@@ -20,3 +20,4 @@ biocLite("scater", ask=FALSE)
 biocLite("scran", ask=FALSE)
 biocLite('destiny', ask=FALSE)
 biocLite('scde', ask=FALSE)
+biocLite('WGCNA', ask=FALSE)
