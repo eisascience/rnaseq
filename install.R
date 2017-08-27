@@ -7,6 +7,8 @@ if(length(new.packages)){
 }
 
 source("http://bioconductor.org/biocLite.R")
+biocLite("RcppEigen", ask=FALSE)
+biocLite("Cairo", ask=FALSE)
 biocLite("rgl", ask=FALSE)
 biocLite("limma", ask=FALSE)
 biocLite(c('fry', 'goana', 'kegga', 'plotMD', 'plotWithHighlights'), ask=FALSE)
