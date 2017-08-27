@@ -1,0 +1,215 @@
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
+library(knitr)
+
+source('https://raw.github.com/bbimber/rnaseq/master/scripts/main.R')
+
+
+```
+
+# Prepare matrix/design
+
+```{r}
+
+print(paste('gene matrix size: ', dim(geneCountMatrix)))
+geneAnnotations <- NULL
+
+write.table(metaUnfilter,'MetadataFiltered.txt', quote=FALSE, sep='\t', row.names=FALSE)
+
+design = model.matrix(designFormula, data = metaUnfilter)
+write.table(design, 'design.txt', sep='\t', row.names = FALSE)
+
+print(paste('datasets with low library size: ', nrow(fullMetadata[fullMetadata$EstimatedLibrarySize <= minLibrarySize,])))
+print(paste('total datasets: ', nrow(metaUnfilter)))
+print(levels(metaUnfilter$GroupCol))
+print(metaUnfilter %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
+
+print(levels(metaUnfilter$GroupCol))
+print(metaUnfilter %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
+
+print(designFormula)
+print(coefs)
+print(contrast)
+
+l <- sub(' ', '', toString(levels(metaUnfilter$GroupCol)))
+combinedResults <- data.frame(Source=character(), Ensembl=character(), GeneName=character(), logFC=numeric(), logCPM=integer(), Comparison=character(), dir=integer(), PValue=numeric(), PAdj=numeric(), description=character(), goAnnotations=character())
+
+
+```
+
+# QC
+
+```{r}
+
+generateQCPlots(geneCountMatrix)
+
+```
+
+# Using edgeR: TMM followed by edgeR QL
+
+```{r}
+
+resumeFile <- 'edgeR_QL.rds'
+if (file.exists(resumeFile)){
+	y_QL <- readRDS(resumeFile)
+} else {
+	y_QL <- runEdgeRQL(geneCountMatrix)
+	saveRDS(y_QL, resumeFile)
+}
+
+resumeFile <- 'edgeR_qlf2.rds'
+if (file.exists(resumeFile)){
+	qlf2 <- readRDS(resumeFile)
+} else {
+	#QL(quasi likehood) F-test
+	# estimates QL dispersion values. It calls the limma function squeezeVar to conduct empirical Bayes #moderation of the genewise QL dispersions. 
+	# If robust=TRUE, then the robust hyperparameter estimation #features of squeezeVar are used
+	dfit = glmQLFit(y_QL, design, robust=TRUE)		
+	
+	#now perform tests
+	qlf2 = glmQLFTest(dfit,coef=coefs)
+
+	saveRDS(qlf2, resumeFile)
+}
+
+QLresultTop <- generateEdgeRSummary(y_QL, qlf2, 'ql')
+if (nrow(QLresultTop) > 0){
+	d1 <- data.frame(Source=c('edgeR_QL'), Ensembl=QLresultTop$Ensembl.Id, GeneName=QLresultTop$external_gene_name, logFC=QLresultTop$logFC, logCPM=QLresultTop$logCPM, Comparison=c(l), dir=QLresultTop$dir, PValue=QLresultTop$PValue, PAdj=c(NA), description=QLresultTop$description, goAnnotations=QLresultTop$goAnnotations)
+	d1 <- arrange(d1,PValue)
+	combinedResults <- rbind(combinedResults, d1)
+}
+
+```
+
+#Using edgeR / GLM
+
+```{r}
+
+resumeFile <- 'edgeR_y_QLM.rds'
+if (file.exists(resumeFile)){
+	y_QLM <- readRDS(resumeFile)
+} else {
+	y2 = DGEList(geneCountMatrix,genes=geneAnnotations) 
+	keep = rowSums(cpm(y2)>1)>=3 #filtering
+
+	y2 = y2[keep,,keep.lib.sizes=FALSE]
+	y2 = calcNormFactors(y2) ##TMM normalization
+
+	y_QLM = estimateGLMCommonDisp(y2, design = design) 
+	y_QLM = estimateGLMTagwiseDisp(y_QLM, design = design) 
+
+	saveRDS(y_QLM, resumeFile)
+}
+
+resumeFile <- 'edgeR_lrt.rds'
+if (file.exists(resumeFile)){
+	lrt <- readRDS(resumeFile)
+} else {
+	fit <- glmFit(y_QLM, design = design)
+	lrt <- glmLRT(fit, coef=coefs)
+
+	saveRDS(lrt, resumeFile)
+}
+
+QLMresultTop <- generateEdgeRSummary(y_QLM, lrt, 'qlm')
+if (nrow(QLMresultTop) > 0){
+	d1 <- data.frame(Source=c('edgeR_QLM'), Ensembl=QLMresultTop$Ensembl.Id, GeneName=QLMresultTop$external_gene_name, logFC=QLMresultTop$logFC, logCPM=QLMresultTop$logCPM, Comparison=c(l), dir=QLMresultTop$dir, PValue=QLMresultTop$PValue, PAdj=c(NA), description=QLMresultTop$description, goAnnotations=QLMresultTop$goAnnotations)
+	d1 <- arrange(d1,PValue)
+	combinedResults <- rbind(combinedResults, d1)
+}
+
+```
+
+## DEseq2 normalization with median ratio of counts over geometric mean
+
+```{r}
+
+resumeFile <- 'deseq2_dds.rds'
+if (file.exists(resumeFile)){
+	dds <- readRDS(resumeFile)
+} else {
+	dds <- prepareDDS(geneCountMatrix)
+	saveRDS(dds, resumeFile)
+}
+
+resumeFile <- 'deseq2_DESeq2result.rds'
+if (file.exists(resumeFile)){
+	DESeq2result <- load(resumeFile)
+} else {
+	res <- results(dds)
+	
+	DESeq2result=data.frame(res) 
+	DESeq2result$GeneID=row.names(DESeq2result)
+	DESeq2result=DESeq2result %>% mutate(dir=sign(log2FoldChange)*(padj<0.05)) %>% arrange(GeneID)
+	row.names(DESeq2result)=DESeq2result$GeneID
+	DESeq2result=DESeq2result[complete.cases(DESeq2result),]
+	DESeq2result <- arrange(DESeq2result,padj)	
+	#DEseqNormCount=log2(counts(dds, normalized=TRUE) + 1)	
+
+	saveRDS(DESeq2result, resumeFile)
+}
+
+topGenes <- doGenerateDeseq2Summary(dds)
+
+d3 <- data.frame(Source=c('DESeq2'), Ensembl=topGenes$Ensembl.Id, GeneName=topGenes$external_gene_name, logFC=topGenes$log2FoldChange, logCPM=topGenes$baseMean, Comparison=c(l), dir=topGenes$dir, PValue=topGenes$pvalue, PAdj=topGenes$padj, description=topGenes$description, goAnnotations=topGenes$goAnnotations)
+d3 <- arrange(d3,PValue)
+combinedResults <- rbind(combinedResults, d3)
+
+```
+
+## RLD / Heatmap
+
+```{r}
+
+resumeFile <- 'deseq2_rld.rds'
+if (file.exists(resumeFile)){
+	rld <- readRDS(resumeFile)
+} else {
+	rld <- rlog(dds, blind=F)
+	saveRDS(rld, resumeFile)
+}
+
+# make the lists
+greatestGenes <- head(topGenes$GeneID, n=50)
+
+#consider shifting to those w/ greatest fold change
+#genesFC <- arrange(topGenes, abs(log2FoldChange))
+#greatestGenes <- c(greatestGenes, tail(topGenes$GeneID, n=30))
+#greatestGenes  <- unique(greatestGenes)
+#print(length(greatestGenes))
+
+my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
+matrix <- assay(rld)[ greatestGenes, ]
+matrix <- matrix - rowMeans(matrix)
+heatmap.2(matrix , labCol=metaUnfilter$GroupCol, col=my_palette)
+
+pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
+write.table(pc1, file='pc1.txt', quote=FALSE, sep='\t', row.names=FALSE)
+qplot(PC1,PC2,color=GroupCol,data=pc1)
+qplot(PC1,PC2,color=AnimalId,data=pc1)
+qplot(PC1,PC2,color=Peptide,data=pc1)
+qplot(PC1,PC2,color=CellClass,data=pc1)
+
+
+```
+
+## Write final output
+
+```{r}
+
+write.table(combinedResults,'Combined_top.txt', sep='\t', quote=FALSE, row.names=FALSE)
+
+save.image(file='rnaseq.rdata')
+
+```
+
+## WGCNA
+
+```{r}
+
+
+save.image(file='checkpoint.rdata')
+run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(metaUnfilter$GroupCol), metaUnfilter$GroupCol)
+
+```
