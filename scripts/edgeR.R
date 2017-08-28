@@ -74,7 +74,7 @@ generareEdgeRSummary <- function(y_QL, qlf2, suffix){
 	plotSmear(qlf2, de.tags=detags)
 	abline(h=c(-1, 1), col="blue")
 
-	if (length(detags) > ){
+	if (length(detags) > 1){
 	  logcpm <- cpm(y_QL[detags,], prior.count=0.5, log=TRUE)
 	  my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
 	  heatmap.2(logcpm , labCol=metaUnfilter$GroupCol, col=my_palette)
