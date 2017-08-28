@@ -56,6 +56,7 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	print(str(groupCol))
 	print(is.atomic(groupCol))
 	
+	metaUnfilter$GroupCol <- character()
 	metaUnfilter$GroupCol <- groupCol
 
 	return(metaUnfilter)
