@@ -45,10 +45,18 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	metaUnfilter <- metaUnfilter[metaUnfilter$EstimatedLibrarySize > minLibrarySize,]
 	metaUnfilter <- metaUnfilter[metaUnfilter$AnimalId != '1247',]
 	metaUnfilter <- metaUnfilter[is.na(metaUnfilter$Status),]
+	
 	print(str(metaUnfilter))
-	print(as.factor(metaUnfilter[[groupColName]]))
-	metaUnfilter['GroupCol'] <- metaUnfilter[[groupColName]]
-	metaUnfilter$GroupCol <- as.factor(metaUnfilter$GroupCol)
+	print(is.atomic(metaUnfilter))
+	
+	groupCol <- metaUnfilter[[groupColName]]
+	print(str(groupCol))
+	print(is.atomic(groupCol))
+	groupCol <- as.factor(groupCol)
+	print(str(groupCol))
+	print(is.atomic(groupCol))
+	
+	metaUnfilter$GroupCol <- groupCol
 
 	return(metaUnfilter)
 }
