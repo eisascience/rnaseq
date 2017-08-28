@@ -37,7 +37,7 @@ joinGene <- function(withGenes, ct, geneName, colName){
   return(withGenes)
 }
 
-findGeneId <- function(name){
+findGeneId <- function(name, geneCountMatrix){
   allGenes <- rownames(geneCountMatrix)
   ret <- allGenes[grepl(paste0('\\|',name,'$'), allGenes)]
   if (length(ret) == 1){
@@ -99,7 +99,7 @@ withGenes$CellClass <- as.character(withGenes$CellClass)
 withGenes$CellClass[withGenes$Population == 'TNF-Neg'] <- 'TNF-Neg'
 withGenes$CellClass <- as.factor(withGenes$CellClass)
 for (geneName in genes){
-  id <- findGeneId(geneName)
+  id <- findGeneId(geneName, geneCountMatrix)
   if (is.na(id)){
     print(paste0('not found: ', geneName))
     next
