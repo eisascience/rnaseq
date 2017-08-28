@@ -46,6 +46,7 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	metaUnfilter <- metaUnfilter[metaUnfilter$AnimalId != '1247',]
 	metaUnfilter <- metaUnfilter[is.na(metaUnfilter$Status),]
 	print(str(metaUnfilter))
+	print(metaUnfilter[[groupColName]])
 	metaUnfilter$GroupCol <- as.factor(metaUnfilter[[groupColName]])
 
 	return(metaUnfilter)
