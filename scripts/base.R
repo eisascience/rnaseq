@@ -46,6 +46,8 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	metaUnfilter <- metaUnfilter[metaUnfilter$AnimalId != '1247',]
 	metaUnfilter <- metaUnfilter[is.na(metaUnfilter$Status),]
 	print(str(metaUnfilter))
+	print('group col:')
+	print(groupColName)
 	print(metaUnfilter[[groupColName]])
 	metaUnfilter$GroupCol <- as.factor(metaUnfilter[[groupColName]])
 
@@ -76,11 +78,11 @@ pullTCRMetaFromLabKey <- function(){
 	df$AnimalId <- df$stimid_animalid
 	df$ReadsetId <- df$readsetid
 	df$EstimatedLibrarySize <- df$metadata_estimatedlibrarysize
-	df$Peptide <- df$stimid_peptide
+	df$Peptide <- as.factor(df$stimid_peptide)
 	df$CellClass <- df$cellclass
 	df$NumCDR3s <- df$readsetid_numcdr3s
-	df$Treatment <- df$stimid_treatment
-	df$DistinctLoci <- df$readsetid_distinctloci
+	df$Treatment <- as.factor(df$stimid_treatment)
+	df$DistinctLoci <- as.factor(df$readsetid_distinctloci)
 	df$OutputFileId <- as.integer(df$metadata_genecountfiles)
 	df$Status <- df$readsetid_status
 	
