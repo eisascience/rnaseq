@@ -65,7 +65,7 @@ pullTCRMetaFromLabKey <- function(){
 		schemaName="lists", 
 		queryName="TCR_Datasets", 
 		viewName="", 
-		colSelect=c('ReadsetId/rowid','ReadsetId','ReadsetId/application','ReadsetId/status','ReadsetId/workbook','StimId','StimId/AnimalId','StimId/Date','StimId/Peptide','StimId/Treatment','Population','Replicate','Cells','StimId/ActivatedFreq','StimId/CellClass','StimId/Background','ReadsetId/numCDR3s','ReadsetId/distinctLoci','ReadsetId/numTcrRuns','SequenceComments','GroupId','GeneTable','Activated','Metadata/geneCountFiles','Metadata/estimatedLibrarySize'), 
+		colSelect=c('ReadsetId/rowid','ReadsetId','ReadsetId/application','ReadsetId/status','ReadsetId/workbook','StimId','StimId/AnimalId','StimId/Date','StimId/Peptide','StimId/Treatment','Population','Replicate','Cells','StimId/ActivatedFreq','CellClass','StimId/Background','ReadsetId/numCDR3s','ReadsetId/distinctLoci','ReadsetId/numTcrRuns','SequenceComments','GroupId','GeneTable','Activated','Metadata/geneCountFiles','Metadata/estimatedLibrarySize'), 
 		containerFilter=NULL,
 		colNameOpt='rname'
 	)
@@ -76,7 +76,7 @@ pullTCRMetaFromLabKey <- function(){
 	df$ReadsetId <- df$readsetid
 	df$EstimatedLibrarySize <- df$metadata_estimatedlibrarysize
 	df$Peptide <- df$stimid_peptide
-	df$CellClass <- df$stimid_cellclass
+	df$CellClass <- df$cellclass
 	df$NumCDR3s <- df$readsetid_numcdr3s
 	df$Treatment <- df$stimid_treatment
 	df$DistinctLoci <- df$readsetid_distinctloci
