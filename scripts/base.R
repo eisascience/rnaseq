@@ -45,7 +45,7 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	metaUnfilter <- metaUnfilter[metaUnfilter$EstimatedLibrarySize > minLibrarySize,]
 	metaUnfilter <- metaUnfilter[metaUnfilter$AnimalId != '1247',]
 	metaUnfilter <- metaUnfilter[is.na(metaUnfilter$Status),]
-
+	print(str(metaUnfilter))
 	metaUnfilter$GroupCol <- as.factor(metaUnfilter[[groupColName]])
 
 	return(metaUnfilter)
@@ -81,6 +81,7 @@ pullTCRMetaFromLabKey <- function(){
 	df$Treatment <- df$stimid_treatment
 	df$DistinctLoci <- df$readsetid_distinctloci
 	df$OutputFileId <- as.integer(df$metadata_genecountfiles)
+	df$Status <- df$readsetid_status
 	
 	df$Activated <- c(FALSE)
 	df$Activated[df$Treatment == 'TAPI-0' & df$Population == 'TNF-Pos'] <- c(TRUE)
