@@ -50,7 +50,7 @@ prepareMetadataTable <- function(allowableIds, groupColName, minLibrarySize = 20
 	return(metaUnfilter)
 }
 
-prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix){
+prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName){
 	#limit to only those in the gene table, in case we dropped 0 count libraries
 	metaUnfilter <- metaUnfilter[metaUnfilter$OutputFileId %in% colnames(geneCountMatrix),]
 	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter[[groupColName]]))
