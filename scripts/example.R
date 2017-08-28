@@ -4,6 +4,7 @@ args = commandArgs(trailingOnly=TRUE)
 
 setwd('/work')
 register(MulticoreParam(12))
+Sys.setenv('ALLOW_WGCNA_THREADS' = 12)
 
 geneCountTableFile=args[1]
 groupColName = args[2]
