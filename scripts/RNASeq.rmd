@@ -20,7 +20,7 @@ write.table(metaUnfilter,'MetadataFiltered.txt', quote=FALSE, sep='\t', row.name
 design = model.matrix(designFormula, data = metaUnfilter)
 write.table(design, 'design.txt', sep='\t', row.names = FALSE)
 
-print(paste('datasets with low library size: ', nrow(fullMetadata[fullMetadata$EstimatedLibrarySize <= minLibrarySize,])))
+#print(paste('datasets with low library size: ', nrow(fullMetadata[fullMetadata$EstimatedLibrarySize <= minLibrarySize,])))
 print(paste('total datasets: ', nrow(metaUnfilter)))
 print(levels(metaUnfilter$GroupCol))
 print(metaUnfilter %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
