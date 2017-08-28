@@ -10,7 +10,7 @@ groupColName = args[2]
 
 allowableIdsTable <- read.table('Metadata.txt', header = TRUE, sep = '\t')
 
-metaUnfilter <- prepareMetadataTable(fullMetadata, allowableIdsTable$OutputFileId, groupColName)
+metaUnfilter <- prepareMetadataTable(allowableIdsTable$OutputFileId, groupColName)
 geneCountMatrix <- parseGeneCountsMatrix(geneCountTableFile, as.character(metaUnfilter$OutputFileId))
 metaUnfilter <- prepareMetadataTable2(metaUnfilter, geneCountMatrix)
 
