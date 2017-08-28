@@ -55,6 +55,7 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName){
 	metaUnfilter <- metaUnfilter[metaUnfilter$OutputFileId %in% colnames(geneCountMatrix),]
 	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter[[groupColName]]))
 
+	return(metaUnfilter)
 }
 
 pullTCRMetaFromLabKey <- function(){
