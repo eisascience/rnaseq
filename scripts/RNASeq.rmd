@@ -42,7 +42,7 @@ combinedResults <- data.frame(Source=character(), Ensembl=character(), GeneName=
 
 ```{r}
 
-generateQCPlots(geneCountMatrix)
+generateQCPlots(geneCountMatrix, metaUnfilter)
 
 ```
 
