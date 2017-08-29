@@ -14,6 +14,7 @@ source('https://raw.github.com/bbimber/rnaseq/master/scripts/main.R')
 
 print(paste('gene matrix size: ', dim(geneCountMatrix)))
 geneAnnotations <- NULL
+saveRDS(geneCountMatrix, 'geneCountMatrix.rds')
 
 write.table(metaUnfilter,'MetadataFiltered.txt', quote=FALSE, sep='\t', row.names=FALSE)
 
