@@ -53,7 +53,7 @@ doPlotMDS <- function(y_QL){
 	}
 }
 
-generareEdgeRSummary <- function(y_QL, qlf2, suffix){
+generateEdgeRSummary <- function(y_QL, qlf2, suffix){
 	#histogram of p-values
 	hist(qlf2$table$PValue)
 
