@@ -68,7 +68,7 @@ generateEdgeRSummary <- function(y_QL, qlf2, suffix){
 	doPlotMDS(y_QL)
 
 	summary(de <- decideTestsDGE(qlf2, p.value=0.0000001, lfc=3))
-	detags <- rownames(y)[as.logical(de)]
+	detags <- rownames(y_QL)[as.logical(de)]
 	print(length(detags))
 
 	plotSmear(qlf2, de.tags=detags)
