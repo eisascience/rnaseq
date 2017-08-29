@@ -74,7 +74,7 @@ if (file.exists(resumeFile)){
 }
 
 QLresultTop <- generateEdgeRSummary(y_QL, qlf2, 'ql')
-if (!is.null(QLresultTop) & nrow(QLresultTop) > 0){
+if (!is.null(QLresultTop) && nrow(QLresultTop) > 0){
 	d1 <- data.frame(Source=c('edgeR_QL'), Ensembl=QLresultTop$Ensembl.Id, GeneName=QLresultTop$external_gene_name, logFC=QLresultTop$logFC, logCPM=QLresultTop$logCPM, Comparison=c(l), dir=QLresultTop$dir, PValue=QLresultTop$PValue, PAdj=c(NA), description=QLresultTop$description, goAnnotations=QLresultTop$goAnnotations)
 	d1 <- arrange(d1,PValue)
 	combinedResults <- rbind(combinedResults, d1)
@@ -113,7 +113,7 @@ if (file.exists(resumeFile)){
 }
 
 QLMresultTop <- generateEdgeRSummary(y_QLM, lrt, 'qlm')
-if (!is.null(QLMresultTop) & nrow(QLMresultTop) > 0){
+if (!is.null(QLMresultTop) && nrow(QLMresultTop) > 0){
 	d1 <- data.frame(Source=c('edgeR_QLM'), Ensembl=QLMresultTop$Ensembl.Id, GeneName=QLMresultTop$external_gene_name, logFC=QLMresultTop$logFC, logCPM=QLMresultTop$logCPM, Comparison=c(l), dir=QLMresultTop$dir, PValue=QLMresultTop$PValue, PAdj=c(NA), description=QLMresultTop$description, goAnnotations=QLMresultTop$goAnnotations)
 	d1 <- arrange(d1,PValue)
 	combinedResults <- rbind(combinedResults, d1)
