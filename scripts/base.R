@@ -89,3 +89,56 @@ pullTCRMetaFromLabKey <- function(){
 
 	return(df)
 }
+
+downloadGenotypes <- function(outputFileIds, genomeName, targetField = 'lineages', requireAll = TRUE){
+	#first translate to readset
+	filterStr <- paste0(outputFileIds, collapse=';')
+
+	df1 <- labkey.selectRows(
+	baseUrl="https://prime-seq.ohsu.edu", 
+	folderPath="/Internal/Bimber", 
+	schemaName="sequenceanalysis", 
+	queryName="outputfiles", 
+	colFilter=makeFilter(c("rowid", "IN", filterStr)),
+	colSelect=c('readset','rowid'), 
+	containerFilter=NULL,
+	colNameOpt='rname'
+	)
+	readsetIds <- unique(df1$readset)  
+
+	df2 <- labkey.selectRows(
+	baseUrl="https://prime-seq.ohsu.edu", 
+	folderPath="/Internal/Bimber", 
+	schemaName="sequenceanalysis", 
+	queryName="sequence_analyses", 
+	colFilter=makeFilter(c("readset", "IN", paste0(readsetIds, collapse=';')), c("library_id/name", "EQUALS", genomeName), c('totalSbtReads', 'GT', 0)),
+	colSelect=c('rowid', 'readset'), 
+	containerFilter=NULL,
+	colNameOpt='rname'
+	)
+	foundReadsetIds <- unique(df2$readset)  
+	analysisIds <- unique(df2$rowid)  
+
+	if (requireAll & length(foundReadsetIds) != length(readsetIds)){
+	stop('Did not find a matching alignment with SBT reads for all readsets')
+	}
+
+	df3 <- labkey.selectRows(
+	baseUrl="https://prime-seq.ohsu.edu", 
+	folderPath="/Internal/Bimber", 
+	schemaName="sequenceanalysis", 
+	queryName="alignment_summary_by_lineage", 
+	colFilter=makeFilter(c("analysis_id", "IN", paste0(analysisIds, collapse=';')), c('totalLineages', 'EQUALS', 1)),
+	colSelect=c('analysis_id', 'analysis_id/readset', 'lineages', 'total'), 
+	containerFilter=NULL,
+	colNameOpt='rname'
+	)
+
+	merged <- merge(df1, df3, by.x='readset', by.y='analysis_id_readset')
+	merged <- merged[,c('rowid', 'lineages', 'total')]
+	ret <- cast(merged, lineages ~ rowid, value='total')
+	rownames(ret) <- ret$lineages
+	ret <- ret[,!(names(ret) %in% c('lineages')), drop = FALSE]
+
+	return(ret)
+}
