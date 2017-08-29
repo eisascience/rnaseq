@@ -82,6 +82,7 @@ pullTCRMetaFromLabKey <- function(){
 	df$Treatment <- as.factor(df$stimid_treatment)
 	df$DistinctLoci <- as.factor(df$readsetid_distinctloci)
 	df$OutputFileId <- as.integer(df$metadata_genecountfiles)
+	df$Application <- as.factor(df$readsetid_application)
 	df <- df[!is.na(df$OutputFileId),]
 	df$Status <- df$readsetid_status
 	
