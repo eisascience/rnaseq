@@ -144,3 +144,27 @@ downloadGenotypes <- function(outputFileIds, genomeName, targetField = 'lineages
 
 	return(ret)
 }
+
+downloadGeneAnnotations <- function(geneIds){
+  df  <- data.frame(geneId=geneIds) 
+  
+  genes.table = NULL
+  if (!file.exists("cache.genes.table")) {
+    ensembl = useEnsembl(biomart="ensembl", dataset="mmulatta_gene_ensembl")
+    attrs <- unique(getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id", "external_gene_name", "description", "name_1006"), values= df$geneId, mart= ensembl))
+    
+    attrs <- attrs %>%
+      group_by(ensembl_gene_id, external_gene_name, description) %>%
+      summarise(goAnnotations = toString(sort(unique(name_1006))))
+    attrs <- data.frame(attrs)
+    
+    save(attrs, file= "cache.genes.table")
+  } else {
+    load("cache.genes.table")
+  }
+  
+  ret <- merge(x=df, y=attrs, by.x="geneId", by.y="ensembl_gene_id",all.x=T, all.y=F)
+  rownames(ret) <- ret$geneId
+  
+  return(ret)
+}
