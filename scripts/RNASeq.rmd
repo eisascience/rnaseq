@@ -135,7 +135,7 @@ if (file.exists(resumeFile)){
 
 resumeFile <- 'deseq2_DESeq2result.rds'
 if (file.exists(resumeFile)){
-	DESeq2result <- load(resumeFile)
+	DESeq2result <- readRDS(resumeFile)
 } else {
 	res <- results(dds)
 	
