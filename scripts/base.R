@@ -78,6 +78,7 @@ pullTCRMetaFromLabKey <- function(){
 	df$Peptide <- as.factor(df$stimid_peptide)
 	df$CellClass <- df$cellclass
 	df$NumCDR3s <- df$readsetid_numcdr3s
+	df$Population <- df$population
 	df$Treatment <- as.factor(df$stimid_treatment)
 	df$DistinctLoci <- as.factor(df$readsetid_distinctloci)
 	df$OutputFileId <- as.integer(df$metadata_genecountfiles)
