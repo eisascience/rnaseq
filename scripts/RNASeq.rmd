@@ -181,10 +181,12 @@ greatestGenes <- head(topGenes$GeneID, n=50)
 #greatestGenes  <- unique(greatestGenes)
 #print(length(greatestGenes))
 
-my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
-matrix <- assay(rld)[ greatestGenes, ]
-matrix <- matrix - rowMeans(matrix)
-heatmap.2(matrix , labCol=metaUnfilter$GroupCol, col=my_palette)
+if (length(greatestGenes) > 0){
+	my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
+	matrix <- assay(rld)[ greatestGenes, ]
+	matrix <- matrix - rowMeans(matrix)
+	heatmap.2(matrix , labCol=metaUnfilter$GroupCol, col=my_palette)
+}
 
 pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
 write.table(pc1, file='pc1.txt', quote=FALSE, sep='\t', row.names=FALSE)
