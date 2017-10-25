@@ -82,6 +82,10 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName, m
 	#also update gene table for those dropped rows
 	geneCountMatrix <- geneCountMatrix[ metaUnfilter[[metadataFieldName]] ] 
 	
+	if (ncol(geneCountMatrix) != nrow(metaUnfilter)){
+	  stop('Rowcount of metadata does not match gene count!')
+	}
+	
 	return(list(meta=metaUnfilter, geneCounts=geneCountMatrix))
 }
 
