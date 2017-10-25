@@ -80,6 +80,7 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName, m
 	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter[[groupColName]]))
 	
 	#also update gene table for those dropped rows
+	geneCountMatrix <- geneCountMatrix[ metaUnfilter[[metadataFieldName]] ] 
 	
 	return(list(meta=metaUnfilter, geneCounts=geneCountMatrix))
 }
