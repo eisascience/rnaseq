@@ -16,24 +16,23 @@ print(paste('gene matrix size: ', dim(geneCountMatrix)))
 geneAnnotations <- NULL
 saveRDS(geneCountMatrix, 'geneCountMatrix.rds')
 
-write.table(metaUnfilter,'MetadataFiltered.txt', quote=FALSE, sep='\t', row.names=FALSE)
+write.table(meta,'MetadataFiltered.txt', quote=FALSE, sep='\t', row.names=FALSE)
 
-design = model.matrix(designFormula, data = metaUnfilter)
+design = model.matrix(designFormula, data = meta)
 write.table(design, 'design.txt', sep='\t', row.names = FALSE)
 
-#print(paste('datasets with low library size: ', nrow(fullMetadata[fullMetadata$EstimatedLibrarySize <= minLibrarySize,])))
-print(paste('total datasets: ', nrow(metaUnfilter)))
-print(levels(metaUnfilter$GroupCol))
-print(metaUnfilter %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
+print(paste('total datasets: ', nrow(meta)))
+print(levels(meta$GroupCol))
+print(meta %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
 
-print(levels(metaUnfilter$GroupCol))
-print(metaUnfilter %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
+print(levels(meta$GroupCol))
+print(meta %>% group_by(GroupCol) %>% summarise(no_rows = length(GroupCol)))
 
 print(designFormula)
 print(coefs)
 print(contrast)
 
-l <- sub(' ', '', toString(levels(metaUnfilter$GroupCol)))
+l <- sub(' ', '', toString(levels(meta$GroupCol)))
 combinedResults <- data.frame(Source=character(), Ensembl=character(), GeneName=character(), logFC=numeric(), logCPM=integer(), Comparison=character(), dir=integer(), PValue=numeric(), PAdj=numeric(), description=character(), goAnnotations=character())
 
 
@@ -43,7 +42,7 @@ combinedResults <- data.frame(Source=character(), Ensembl=character(), GeneName=
 
 ```{r}
 
-generateQCPlots(geneCountMatrix, metaUnfilter)
+generateQCPlots(geneCountMatrix, meta)
 
 ```
 
@@ -185,7 +184,7 @@ if (length(greatestGenes) > 0){
 	my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
 	matrix <- assay(rld)[ greatestGenes, ]
 	matrix <- matrix - rowMeans(matrix)
-	heatmap.2(matrix , labCol=metaUnfilter$GroupCol, col=my_palette)
+	heatmap.2(matrix , labCol=meta$GroupCol, col=my_palette)
 }
 
 pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
@@ -213,6 +212,6 @@ save.image(file='rnaseq.rdata')
 ```{r}
 
 save.image(file='checkpoint.rdata')
-#run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(metaUnfilter$GroupCol), metaUnfilter$GroupCol)
+#run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(meta$GroupCol), meta$GroupCol)
 
 ```

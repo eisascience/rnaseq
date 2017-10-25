@@ -11,16 +11,16 @@ groupColName = args[2]
 
 allowableIdsTable <- read.table('Metadata.txt', header = TRUE, sep = '\t')
 
-metaUnfilter <- prepareMetadataTable(allowableIdsTable$OutputFileId, groupColName)
-geneCountMatrix <- parseGeneCountsMatrix(geneCountTableFile, as.character(metaUnfilter$OutputFileId))
-metaUnfilter <- prepareMetadataTable2(metaUnfilter, geneCountMatrix)
+l <- prepareTables(allowableIdsTable$ReadsetId, geneCountTableFile, groupColName, minLibrarySize=500000)
+meta <- l$meta
+geneCountMatrix <- l$geneCounts
 
-if(!exists('designF'){
+if(!exists('designF')){
 	designF = ' ~ AnimalId + GroupCol'
 }
 
 designFormula <- as.formula(designF)
 coefs <- length(colnames(design))
-contrast <- c(groupColName, levels(metaUnfilter$GroupCol)[nlevels(metaUnfilter$GroupCol)], levels(metaUnfilter$GroupCol)[1])
+contrast <- c(groupColName, levels(meta$GroupCol)[nlevels(meta$GroupCol)], levels(meta$GroupCol)[1])
 
 rmarkdown::render('RNASeq.rmd', clean=TRUE)
