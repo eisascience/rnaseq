@@ -35,14 +35,14 @@ addEnsembl <- function(df){
   return(merge(df, attrs, by.x='Ensembl.Id', by.y='ensembl_gene_id'))
 }
 
-prepareTables <- function(allowableIds, geneCountTableFile, groupColName, minLibrarySize=500000){
-  metaUnfilter <- prepareMetadataTable(allowableIds, groupColName, 'readsetid')
+prepareTables <- function(allowableIds, geneCountTableFile, grouping, minLibrarySize=500000){
+  metaUnfilter <- prepareMetadataTable(allowableIds, grouping, 'ReadsetId')
   geneCountMatrix <- parseGeneCountsMatrix(geneCountTableFile, as.character(metaUnfilter$ReadsetId))
   
-  return(prepareMetadataTable2(metaUnfilter, geneCountMatrix, groupColName, minLibrarySize))
+  return(prepareMetadataTable2(metaUnfilter, geneCountMatrix, minLibrarySize))
 }
 
-prepareMetadataTable <- function(allowableIds, groupColName, metadataFieldName='readsetid'){
+prepareMetadataTable <- function(allowableIds, grouping, metadataFieldName='ReadsetId', groupingDataframe=NULL){
 	#pull full metadata from LK
 	metadataFull <- pullTCRMetaFromLabKey()
 	metaUnfilter <- metadataFull[metadataFull[[metadataFieldName]] %in% allowableIds,]
@@ -54,12 +54,17 @@ prepareMetadataTable <- function(allowableIds, groupColName, metadataFieldName='
 	metaUnfilter$HasCDR3s[metaUnfilter$NumCDR3s > 0] <- c(TRUE)
 
 	metaUnfilter$EstimatedLibrarySize <- as.numeric(gsub(',','',metaUnfilter$EstimatedLibrarySize))
-	metaUnfilter$GroupCol <- as.factor(metaUnfilter[[groupColName]])
+	if (is.character(grouping)){
+	  metaUnfilter$GroupCol <- as.factor(metaUnfilter[[grouping]])  
+	} else if(is.data.frame(grouping)) {
+	  toJoin <- data.frame(ReadsetId=grouping$ReadsetId, GroupCol=grouping$GroupCol)
+	  metaUnfilter <- merge(metaUnfilter, toJoin, by.x=c('ReadsetId'))
+	}
 
 	return(metaUnfilter)
 }
 
-prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName, minLibrarySize = 2000000, minFeatures = 1000, metadataFieldName='ReadsetId'){
+prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize = 2000000, minFeatures = 1000, metadataFieldName='ReadsetId'){
   #first, limit to only those in the gene table, in case we dropped metadata rows
   metaUnfilter <- metaUnfilter[metaUnfilter[[metadataFieldName]] %in% colnames(geneCountMatrix),]
   
@@ -77,14 +82,18 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, groupColName, m
 	metaUnfilter <- metaUnfilter[metaUnfilter$TotalNonZeroFeatures > minFeatures,]
 	print(paste0('rows dropped due to low non-zero features: ', (origRows - nrow(metaUnfilter))))
 	
-	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter[[groupColName]]))
+	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter$GroupCol))
 	
 	#also update gene table for those dropped rows
-	geneCountMatrix <- geneCountMatrix[ metaUnfilter[[metadataFieldName]] ] 
+	origCols <- ncol(geneCountMatrix)
+	toSelect <- intersect(metaUnfilter[[metadataFieldName]], colnames(geneCountMatrix))
+	geneCountMatrix <- geneCountMatrix[ ,toSelect ] 
 	
 	if (ncol(geneCountMatrix) != nrow(metaUnfilter)){
 	  stop('Rowcount of metadata does not match gene count!')
 	}
+	
+	print(paste0('gene count cols dropped due to metadata drops: ', (origCols - ncol(geneCountMatrix))))
 	
 	return(list(meta=metaUnfilter, geneCounts=geneCountMatrix))
 }
