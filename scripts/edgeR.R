@@ -44,14 +44,14 @@ writeEdgeRTopGenes <- function(qlf2, y_QL, pval = 0.05, outputFile){
 	return(QLresultTop)
 }
 
-doPlotMDS <- function(y_QL){
+doPlotMDS <- function(y_QL, meta){
 	#for mds:
 	for (col in c('AnimalId', 'Peptide', 'Population', 'Activated', 'NumCDR3s', 'CellClass', 'Treatment', 'DistinctLoci')){
-		plotMDS.DGEList(y_QL, labels = metaUnfilter[[col]])
+		plotMDS.DGEList(y_QL, labels = meta[[col]])
 	}
 }
 
-generateEdgeRSummary <- function(y_QL, qlf2, suffix){
+generateEdgeRSummary <- function(y_QL, qlf2, meta, suffix){
 	#histogram of p-values
 	hist(qlf2$table$PValue)
 
@@ -63,7 +63,7 @@ generateEdgeRSummary <- function(y_QL, qlf2, suffix){
 	#top genes
 	QLresultTop <- writeEdgeRTopGenes(qlf2, y_QL, outputFile=paste0('edgeR_',suffix,'_topGenes.txt'))
 
-	doPlotMDS(y_QL)
+	doPlotMDS(y_QL, meta)
 
 	summary(de <- decideTestsDGE(qlf2, p.value=0.0000001, lfc=3))
 	detags <- rownames(y_QL)[as.logical(de)]
@@ -75,7 +75,7 @@ generateEdgeRSummary <- function(y_QL, qlf2, suffix){
 	if (length(detags) > 1){
 	  logcpm <- cpm(y_QL[detags,], prior.count=0.5, log=TRUE)
 	  my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
-	  heatmap.2(logcpm , labCol=metaUnfilter$GroupCol, col=my_palette)
+	  heatmap.2(logcpm , labCol=meta$GroupCol, col=my_palette)
 	}
 	
 	return(QLresultTop)
