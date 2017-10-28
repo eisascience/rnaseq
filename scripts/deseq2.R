@@ -34,8 +34,7 @@ doGenerateDeseq2Summary <- function(dds){
 	nGenes <- length(counts[,1])
 	plot(sizeFactors(dds),colSums(counts)/nGenes)
 
-	DESeq2result <- transform(DESeq2result, Ensembl = colsplit(GeneID, split = "\\|", names = c('Id', 'Name')))
-	DESeq2result$Ensembl.Name[as.character(DESeq2result$Ensembl.Name) == as.character(DESeq2result$Ensembl.Id)] <- c(NA)
+	DESeq2result$Ensembl.Id = DESeq2result$GeneID
 	write.table(DESeq2result,'DESeq2result.txt', sep='\t', quote=FALSE, row.names=FALSE)
 
 	topGenes <- DESeq2result[DESeq2result$padj < 0.05,]

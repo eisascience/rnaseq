@@ -21,8 +21,7 @@ writeEdgeRSummary <- function(qlf2, y_QL, outputFile){
 	QLresult = QLresult %>% dplyr::select(GeneID,logFC,logCPM,PValue,FDR) %>% mutate(dir=sign(logFC)*(FDR<0.05))%>% arrange(GeneID)
 	row.names(QLresult)=QLresult$GeneID
 
-	QLresult <- transform(QLresult, Ensembl = colsplit(GeneID, split = "\\|", names = c('Id', 'Name')))
-	QLresult$Ensembl.Name[as.character(QLresult$Ensembl.Name) == as.character(QLresult$Ensembl.Id)] <- c(NA)
+	QLresult$Ensembl.Id = QLresult$GeneID
 	write.table(QLresult,outputFile, quote=FALSE, sep='\t', row.names=FALSE)
 	
 	return(QLresult)
@@ -38,8 +37,7 @@ writeEdgeRTopGenes <- function(qlf2, y_QL, pval = 0.05, outputFile){
 	QLresultTop$GeneID <- rownames(QLresultTop)
 	QLresultTop = QLresultTop %>% dplyr::select(GeneID,logFC,logCPM,PValue,FDR) %>% mutate(dir=sign(logFC)*(FDR<0.05)) %>% arrange(PValue)
 
-	QLresultTop <- transform(QLresultTop, Ensembl = colsplit(GeneID, split = "\\|", names = c('Id', 'Name')))
-	QLresultTop$Ensembl.Name[as.character(QLresultTop$Ensembl.Name) == as.character(QLresultTop$Ensembl.Id)] <- c(NA)
+	QLresult$Ensembl.Id = QLresult$GeneID
 	QLresultTop <- addEnsembl(QLresultTop)
 	write.table(QLresultTop, outputFile, quote=FALSE, sep='\t', row.names=FALSE)
 	
