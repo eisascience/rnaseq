@@ -1,10 +1,10 @@
-prepareDDS <- function(geneCountMatrix, sizeFactorsFromEdgeR=FALSE){
+prepareDDS <- function(geneCountMatrix, meta, sizeFactorsFromEdgeR=FALSE){
 	countdata=data.frame(geneCountMatrix)
 	
 	#not necessary if columns have proper names
 	#names(countdata) <- gsub('X', '', names(countdata))
 
-	coldata=metaUnfilter 
+	coldata=meta 
 	rownames(coldata)=names(countdata)
 
 	dds <- DESeqDataSetFromMatrix(countData = countdata,colData = coldata,design = designFormula)

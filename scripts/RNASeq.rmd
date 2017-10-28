@@ -129,7 +129,7 @@ resumeFile <- 'deseq2_dds.rds'
 if (file.exists(resumeFile)){
 	dds <- readRDS(resumeFile)
 } else {
-	dds <- prepareDDS(geneCountMatrix)
+	dds <- prepareDDS(geneCountMatrix, meta)
 	saveRDS(dds, resumeFile)
 }
 
