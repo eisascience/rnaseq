@@ -22,7 +22,7 @@ writeEdgeRSummary <- function(qlf2, y_QL, outputFile){
 	row.names(QLresult)=QLresult$GeneID
 
 	QLresult$Ensembl.Id <- QLresult$GeneID
-	write.table(QLresult,outputFile, quote=FALSE, sep='\t', row.names=FALSE)
+	write.table(QLresult, file = outputFile, quote=FALSE, sep='\t', row.names=FALSE)
 	
 	return(QLresult)
 }
