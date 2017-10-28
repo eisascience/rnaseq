@@ -46,7 +46,7 @@ generateQCPlots(geneCountMatrix, meta)
 
 ```
 
-# Using edgeR: TMM followed by edgeR QL
+# Using edgeR: TMM followed by edgeR QL F-Test
 
 ```{r}
 
@@ -82,7 +82,7 @@ if (!is.null(QLresultTop) && nrow(QLresultTop) > 0){
 
 ```
 
-#Using edgeR / GLM
+#Using edgeR, followed by likelihood ratio test
 
 ```{r}
 
@@ -96,8 +96,7 @@ if (file.exists(resumeFile)){
 	y2 = y2[keep,,keep.lib.sizes=FALSE]
 	y2 = calcNormFactors(y2) ##TMM normalization
 
-	y_QLM = estimateGLMCommonDisp(y2, design = design) 
-	y_QLM = estimateGLMTagwiseDisp(y_QLM, design = design) 
+	y_QLM = estimateDisp(y2, design, robust=TRUE) 
 
 	saveRDS(y_QLM, resumeFile)
 }
@@ -212,6 +211,7 @@ save.image(file='rnaseq.rdata')
 ```{r}
 
 save.image(file='checkpoint.rdata')
-#run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(meta$GroupCol), meta$GroupCol)
+allowWGCNAThreads()
+run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(meta$GroupCol), levels(meta$GroupCol))
 
 ```
