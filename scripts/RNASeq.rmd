@@ -170,6 +170,10 @@ if (file.exists(resumeFile)){
 	saveRDS(rld, resumeFile)
 }
 
+cex1 = 1.5;
+plotPCA(rld, intgroup=c("GroupCol"))
+dev.off()
+
 # make the lists
 greatestGenes <- head(topGenes$GeneID, n=50)
 
@@ -195,17 +199,22 @@ qplot(PC1,PC2,color=CellClass,data=pc1)
 
 ```
 
-## VST
+## VSD
 
 ```{r}
 
-resumeFile <- 'deseq2_vst.rds'
+resumeFile <- 'deseq2_vsd.rds'
 if (file.exists(resumeFile)){
-	vst <- readRDS(resumeFile)
+	vsd <- readRDS(resumeFile)
 } else {
-	vst <- vst(dds, blind=F)
-	saveRDS(vst, resumeFile)
+	vsd <- getVarianceStabilizedData(dds)
+	saveRDS(vsd, resumeFile)
 }
+
+#PCA
+cex1 = 1.5;
+plotPCA(vsd, intgroup=c("GroupCol"))
+dev.off()
 
 ```
 
@@ -234,10 +243,11 @@ save.image(file='rnaseq.rdata')
 if(!(exists('skipDESeqWGCNA') && skipDESeqWGCNA)){
 	save.image(file='checkpoint.rdata')
 	allowWGCNAThreads()
-	run_WGCNA_top(rld, 'wgcna_deseq.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
+	run_WGCNA_top_DESeq(vsd, 'wgcna_deseq.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
 } else {
-  print('skipping edgeR wgcna')
+  print('skipping DESeq2 wgcna')
 }
 
+save.image(file='checkpoint.rdata')
 
 ```

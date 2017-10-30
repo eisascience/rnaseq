@@ -58,3 +58,13 @@ run_WGCNA_top <- function(raw_mat, fname, groups, labels, minCPM = 1, top=5000){
 	mat_eigens <- generate_eigengene_plot(net_list[[1]], most_var[[1]], fname, groups, labels);
 	return(list(voom_mat, most_var, net_list, mat_eigens));
 }
+
+run_WGCNA_top_DESeq <- function(vsd, fname, groups, labels, minCPM = 1, top=5000){
+	datExpr<- t(vsd)
+
+	most_var <- get_most_variable_matrix(datExpr, minCPM, top);
+	
+	net_list <- get_net(most_var[[1]]);
+	mat_eigens <- generate_eigengene_plot(net_list[[1]], most_var[[1]], fname, groups, labels);
+	return(list(vsd, most_var, net_list, mat_eigens));
+}
