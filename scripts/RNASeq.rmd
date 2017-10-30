@@ -203,7 +203,7 @@ resumeFile <- 'deseq2_vsd.rds'
 if (file.exists(resumeFile)){
 	vsd <- readRDS(resumeFile)
 } else {
-	vsd <- getVarianceStabilizedData(dds)
+	vsd <- varianceStabilizingTransformation(dds)
 	saveRDS(vsd, resumeFile)
 }
 
@@ -240,7 +240,7 @@ save.image(file='rnaseq.rdata')
 if(!(exists('skipDESeqWGCNA') && skipDESeqWGCNA)){
 	save.image(file='checkpoint.rdata')
 	allowWGCNAThreads()
-	run_WGCNA_top_DESeq(vsd, 'wgcna_deseq.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
+	run_WGCNA_top_DESeq(assay(vsd), 'wgcna_deseq.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
 } else {
   print('skipping DESeq2 wgcna')
 }
