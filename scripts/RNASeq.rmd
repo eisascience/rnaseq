@@ -210,8 +210,13 @@ save.image(file='rnaseq.rdata')
 
 ```{r}
 
-save.image(file='checkpoint.rdata')
-allowWGCNAThreads()
-run_WGCNA_top_5000(y_QL, 'wgcna.txt', as.integer(meta$GroupCol), levels(meta$GroupCol))
+if(!(exists('skipWGCNA') && skipWGCNA)){
+	save.image(file='checkpoint.rdata')
+	allowWGCNAThreads()
+	run_WGCNA_top(y_QL, 'wgcna.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
+} else {
+  print('skipping wgcna')
+}
+
 
 ```
