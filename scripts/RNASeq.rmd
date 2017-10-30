@@ -209,7 +209,7 @@ if (file.exists(resumeFile)){
 
 #PCA
 cex1 = 1.5;
-pc1 <- DESeq2::plotPCA(vsd, intgroup=c("GroupCol"))
+pc1 <- DESeq2::plotPCA(vsd, intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
 write.table(pc1, file='vsd_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
 dev.off()
 
