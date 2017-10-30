@@ -224,27 +224,3 @@ write.table(combinedResults,'Combined_top.txt', sep='\t', quote=FALSE, row.names
 save.image(file='rnaseq.rdata')
 
 ```
-
-## WGCNA
-
-```{r}
-
-#if(!(exists('skipEdgeRWGCNA') && skipEdgeRWGCNA)){
-#	save.image(file='checkpoint.rdata')
-#	allowWGCNAThreads()
-#	run_WGCNA_top(y_QL, 'wgcna_edgeR.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
-#} else {
-#  print('skipping edgeR wgcna')
-#}
-
-if(!(exists('skipDESeqWGCNA') && skipDESeqWGCNA)){
-	save.image(file='checkpoint.rdata')
-	allowWGCNAThreads()
-	run_WGCNA_top_DESeq(assay(vsd), 'wgcna_deseq.txt', as.integer(meta$GroupCol), levels(meta$GroupCol), top=5000)
-} else {
-  print('skipping DESeq2 wgcna')
-}
-
-save.image(file='checkpoint.rdata')
-
-```
