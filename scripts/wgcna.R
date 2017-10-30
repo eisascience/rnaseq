@@ -52,6 +52,7 @@ generate_eigengene_plot <- function(net, mat, fname, groups, labels){
 #Automates network construction based on top 5000 most variables genes. Pass a DGEList object (e.g. from edgeR scripts) as raw_mat for best results
 run_WGCNA_top <- function(raw_mat, fname, groups, labels, minCPM = 1, top=5000){
 	voom_mat <- voom(raw_mat);
+	print(dim(voom_mat))
 	most_var <- get_most_variable_matrix(voom_mat$E, minCPM, top);
 	
 	net_list <- get_net(most_var[[1]]);
@@ -60,8 +61,8 @@ run_WGCNA_top <- function(raw_mat, fname, groups, labels, minCPM = 1, top=5000){
 }
 
 run_WGCNA_top_DESeq <- function(vsd, fname, groups, labels, minCPM = 1, top=5000){
-	datExpr<- t(vsd)
-
+	datExpr<- vsd
+	print(dim(datExpr))
 	most_var <- get_most_variable_matrix(datExpr, minCPM, top);
 	
 	net_list <- get_net(most_var[[1]]);
