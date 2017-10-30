@@ -30,7 +30,7 @@ generate_eigengene_plot <- function(net, mat, fname, groups, labels){
 	mat_eigens <- moduleEigengenes(t(mat), net$colors)$eigengene;
 	i <- 2;
 	jpeg(fname, 1600, 1600, res = 300)
-	#par(mfrow = c(floor(sqrt(dim(mat_eigens)[2] - 1)), ceiling(sqrt(dim(mat_eigens)[2] - 1))));
+	par(mfrow = c(max(1, floor(sqrt(dim(mat_eigens)[2] - 1))), max(1, ceiling(sqrt(dim(mat_eigens)[2] - 1)))));
 	while(i <= max(net$colors) + 1)
 	{
 		to_plot <- list();
