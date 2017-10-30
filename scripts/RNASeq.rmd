@@ -170,10 +170,6 @@ if (file.exists(resumeFile)){
 	saveRDS(rld, resumeFile)
 }
 
-cex1 = 1.5;
-plotPCA(rld, intgroup=c("GroupCol"))
-dev.off()
-
 # make the lists
 greatestGenes <- head(topGenes$GeneID, n=50)
 
@@ -191,7 +187,7 @@ if (length(greatestGenes) > 0){
 }
 
 pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
-write.table(pc1, file='pc1.txt', quote=FALSE, sep='\t', row.names=FALSE)
+write.table(pc1, file='rld_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
 qplot(PC1,PC2,color=GroupCol,data=pc1)
 qplot(PC1,PC2,color=AnimalId,data=pc1)
 qplot(PC1,PC2,color=Peptide,data=pc1)
@@ -213,7 +209,8 @@ if (file.exists(resumeFile)){
 
 #PCA
 cex1 = 1.5;
-plotPCA(vsd, intgroup=c("GroupCol"))
+pc1 <- DESeq2::plotPCA(vsd, intgroup=c("GroupCol"))
+write.table(pc1, file='vsd_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
 dev.off()
 
 ```
