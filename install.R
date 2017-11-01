@@ -10,3 +10,5 @@ require(devtools)
 remove.packages('flexmix')
 install_version('flexmix', version = '2.3-13', repos = 'http://cran.us.r-project.org')
 devtools::install_github('hms-dbmi/scde', build_vignettes = FALSE, force = TRUE)
+
+devtools::install_github("satijalab/seurat", ref = "v2.1.0")

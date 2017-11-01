@@ -8,7 +8,7 @@ get_most_variable_matrix <- function(voom_mat, CPM_min, n)
 }
 
 #Generates WGCNA object. mat = matrix of log2 CPM counts (usually from above function)
-get_net <- function(mat){
+get_net <- function(mat, minModuleSize=100){
 	power <- 1; 
 	sft <- pickSoftThreshold(t(mat), networkType = "signed", powerVector = seq(1, 30, 1));
 	pv <- which(sft$fitIndices[,2] >= .9)
@@ -21,7 +21,7 @@ get_net <- function(mat){
 		power <- sft$fitIndices[which(sft$fitIndices[,2] == max(sft$fitIndices[,2]))[1],1];
 	}
 	print(power);
-	net <- blockwiseModules(t(mat), networkType = "signed", power = power, numericLabels = TRUE, minModuleSize = 100);
+	net <- blockwiseModules(t(mat), networkType = "signed", power = power, numericLabels = TRUE, minModuleSize = minModuleSize);
 	return(list(net, sft));
 }
 
@@ -60,12 +60,12 @@ run_WGCNA_top <- function(raw_mat, fname, groups, labels, minCPM = 1, top=5000){
 	return(list(voom_mat, most_var, net_list, mat_eigens));
 }
 
-run_WGCNA_top_DESeq <- function(vsd, fname, groups, labels, minCPM = 1, top=5000){
+run_WGCNA_top_DESeq <- function(vsd, fname, groups, labels, minCPM = 1, top=5000, minModuleSize=100){
 	datExpr<- vsd
 	print(dim(datExpr))
 	most_var <- get_most_variable_matrix(datExpr, minCPM, top);
 	
-	net_list <- get_net(most_var[[1]]);
+	net_list <- get_net(most_var[[1]], minModuleSize);
 	mat_eigens <- generate_eigengene_plot(net_list[[1]], most_var[[1]], fname, groups, labels);
 	return(list(vsd, most_var, net_list, mat_eigens));
 }
