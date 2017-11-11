@@ -13,7 +13,7 @@ parseGeneCountsMatrix <- function(fileName, allowableColumnIDs){
   geneCounts <- geneCounts[ toSelect ] 
   print(paste0('columns filtered from original gene count matrix because they were not in metadata: ', (origCols - ncol(geneCounts))))
   
-  geneCountMatrix <- data.matrix(geneCounts, rownames.force = NA)
+  geneCountMatrix <- Matrix(geneCounts, rownames.force=NA, sparse=TRUE)
   origRow <- nrow(geneCountMatrix)
   geneCountMatrix <- geneCountMatrix[ ,colSums(geneCountMatrix) > 0 ] 
   print(paste0('rows filtered from original gene count matrix because of zero gene feature counts: ', (origRow - nrow(geneCountMatrix))))
@@ -25,10 +25,10 @@ parseGeneCountsMatrix <- function(fileName, allowableColumnIDs){
 addEnsembl <- function(df){
   ensembl = useEnsembl(biomart="ensembl", dataset="mmulatta_gene_ensembl")
   ensemblIds = unique(df$Ensembl.Id)
-  attrs <- unique(getBM(attributes=c('ensembl_gene_id','external_gene_name','description','name_1006'), filters ='ensembl_gene_id', values=ensemblIds, mart = ensembl))
+  attrs <- unique(getBM(attributes=c('ensembl_gene_id','external_gene_name','description','name_1006', 'hgnc_symbol'), filters ='ensembl_gene_id', values=ensemblIds, mart = ensembl))
   
   attrs <- attrs %>%
-    group_by(ensembl_gene_id, external_gene_name, description) %>%
+    group_by(ensembl_gene_id, external_gene_name, hgnc_symbol, description) %>%
     summarise(goAnnotations = toString(sort(unique(name_1006))))
   attrs <- data.frame(attrs)
   
