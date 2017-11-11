@@ -8,6 +8,9 @@ install_version('flexmix', version = '2.3-13', repos = 'http://cran.us.r-project
 devtools::install_github('hms-dbmi/scde', build_vignettes = FALSE, force = TRUE)
 
 # Seurat
-devtools::install_github("satijalab/seurat", ref = "v2.1.0")
+devtools::install_github('satijalab/seurat', ref = 'v2.1.0')
 
 # Monocle
+source('http://bioconductor.org/biocLite.R')
+biocLite()
+biocLite('monocle', 'scater')
