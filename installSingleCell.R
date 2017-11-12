@@ -13,4 +13,4 @@ devtools::install_github('satijalab/seurat', ref = 'v2.1.0')
 # Monocle
 source('http://bioconductor.org/biocLite.R')
 biocLite()
-biocLite('monocle', 'scater')
+biocLite(c('monocle', 'scater', 'RSQLite'), ask=FALSE, dependencies=TRUE)
