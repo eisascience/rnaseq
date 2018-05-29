@@ -125,7 +125,7 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize 
 	return(list(meta=metaUnfilter, geneCounts=geneCountMatrix))
 }
 
-pullTCRMetaFromLabKey <- function(requireOuputFileId=TRUE){
+pullTCRMetaFromLabKey <- function(requireOuputFileId = FALSE, replicateAsSuffix = FALSE){
 	df <- labkey.selectRows(
 		baseUrl="https://prime-seq.ohsu.edu", 
 		folderPath="/Labs/Bimber/", 
