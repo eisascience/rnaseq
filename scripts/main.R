@@ -12,6 +12,7 @@ library(dplyr)
 library(WGCNA)
 library("BiocParallel")
 library(Rlabkey)
+library(Matrix)
 
 source('https://raw.github.com/bbimber/rnaseq/master/scripts/base.R')
 source('https://raw.github.com/bbimber/rnaseq/master/scripts/qc.R')
