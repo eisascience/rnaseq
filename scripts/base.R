@@ -135,7 +135,7 @@ pullTCRMetaFromLabKey <- function(requireOuputFileId=TRUE){
 		colSelect=c(
 		  'readsetId','readsetId/status','readsetId/workbook','readsetId/totalForwardReads','readsetId/numCDR3s','readsetId/distinctLoci','readsetId/numTcrRuns',
 		  'sortId', 'sortId/stimId','sortId/stimId/animalId','sortId/stimId/date','sortId/stimId/stim','sortId/stimId/treatment','sortId/stimId/activated','sortId/stimId/background',
-		  'sortId/population','sortId/replicate','sortId/cells', "rowid", "sortid/stimid/peptide/category", "sortid/stimid/peptide/type"
+		  'sortId/population','sortId/replicate','sortId/cells', "rowid", "sortid/stimid/stim/category", "sortid/stimid/stim/type"
 		),
 		containerFilter=NULL,
 		colNameOpt='rname'
@@ -184,10 +184,10 @@ pullTCRMetaFromLabKey <- function(requireOuputFileId=TRUE){
 	names(df)[names(df)=="sortid_stimid_stim"] <- "Peptide"
 	df$Peptide <- as.factor(df$Peptide)
 	
-	names(df)[names(df)=="sortid_stimid_peptide_category"] <- "StimCategory"
+	names(df)[names(df)=="sortid_stimid_stim_category"] <- "StimCategory"
 	df$StimCategory <- as.factor(df$StimCategory)
 	
-	names(df)[names(df)=="sortid_stimid_peptide_type"] <- "StimType"
+	names(df)[names(df)=="sortid_stimid_stim_type"] <- "StimType"
 	df$StimType <- as.factor(df$StimType)
 
 		names(df)[names(df)=="sortid_population"] <- "Population"
