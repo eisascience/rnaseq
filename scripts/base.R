@@ -1,30 +1,57 @@
-parseGeneCountsMatrix <- function(fileName, allowableColumnIDs){
+library(limma)
+library(lattice)
+library(edgeR)
+library(tidyverse)
+library(DESeq2)
+library(stringr)
+library(gplots)
+library(ggplot2)
+library(reshape)
+library(biomaRt)
+library(dplyr)
+library("BiocParallel")
+library(Rlabkey)
+library(Matrix)
+
+parseGeneCountsMatrix <- function(fileName, allowableColumnIDs = NA, filterZeroCounts=TRUE){
   geneCounts <- read.table(fileName, sep = '\t', header=TRUE, row.names = 1)
-  geneCounts <- geneCounts[, !(names(geneCounts) %in% c('TranscriptId', 'GeneDescription', 'SamplesWithReads', 'GeneName')) ] 
+  geneCounts <- geneCounts[, !(names(geneCounts) %in% c('GeneId', 'GeneDescription', 'SamplesWithReads', 'GeneName')) ] 
   geneCounts <- geneCounts[!(rownames(geneCounts) %in% c('N_ambiguous', 'N_multimapping', 'N_noFeature', 'N_unmapped')),] 
   
-  #debugging
-  #geneCounts <- geneCounts[c(1:500),c(2:8)]
+
   origCols <- ncol(geneCounts)
   
   colnames(geneCounts) <- gsub('X', '', colnames(geneCounts))
+  geneCounts <- geneCounts[, sort(colnames(geneCounts))]
   
-  toSelect <- intersect(allowableColumnIDs, colnames(geneCounts))
-  geneCounts <- geneCounts[ toSelect ] 
-  print(paste0('columns filtered from original gene count matrix because they were not in metadata: ', (origCols - ncol(geneCounts))))
+  if (!is.na(allowableColumnIDs)){
+    toSelect <- intersect(allowableColumnIDs, colnames(geneCounts))
+    geneCounts <- geneCounts[ toSelect ] 
+    print(paste0('columns filtered from original gene count matrix because they were not in metadata: ', (origCols - ncol(geneCounts))))
+  }
   
-  geneCountMatrix <- Matrix(geneCounts, rownames.force=NA, sparse=TRUE)
-  origRow <- nrow(geneCountMatrix)
-  geneCountMatrix <- geneCountMatrix[ ,colSums(geneCountMatrix) > 0 ] 
-  print(paste0('rows filtered from original gene count matrix because of zero gene feature counts: ', (origRow - nrow(geneCountMatrix))))
+  geneCountMatrix <- data.matrix(geneCounts)
+  
+  if (filterZeroCounts){
+    origRow <- nrow(geneCountMatrix)
+    geneCountMatrix <- geneCountMatrix[ ,colSums(geneCountMatrix) > 0 ] 
+    print(paste0('rows filtered from original gene count matrix because of zero gene feature counts: ', (origRow - nrow(geneCountMatrix))))
+  }
+  
   print(paste0('total samples: ', ncol(geneCountMatrix)))
                
   return(geneCountMatrix)
 }
-	
-addEnsembl <- function(df){
+
+addClusterDifferentiation <- function(df, cdFile=NA, yField='GeneSymbol', xField='external_gene_name'){
+  ref <- read.table(cdFile, sep='\t', quote='"', header=TRUE)
+  
+  return(merge(df, ref, by.x=c(xField), by.y=c(yField), all.x=TRUE))
+}
+
+addEnsembl <- function(df, geneField = 'Ensembl.Id'){
   ensembl = useEnsembl(biomart="ensembl", dataset="mmulatta_gene_ensembl")
-  ensemblIds = unique(df$Ensembl.Id)
+  ensemblIds = unique(df[[geneField]])
   attrs <- unique(getBM(attributes=c('ensembl_gene_id','external_gene_name','description','name_1006', 'hgnc_symbol'), filters ='ensembl_gene_id', values=ensemblIds, mart = ensembl))
   
   attrs <- attrs %>%
@@ -32,7 +59,7 @@ addEnsembl <- function(df){
     summarise(goAnnotations = toString(sort(unique(name_1006))))
   attrs <- data.frame(attrs)
   
-  return(merge(df, attrs, by.x='Ensembl.Id', by.y='ensembl_gene_id'))
+  return(merge(df, attrs, by.x=geneField, by.y='ensembl_gene_id'))
 }
 
 prepareTables <- function(allowableIds, geneCountTableFile, grouping, minLibrarySize=500000){
@@ -53,7 +80,7 @@ prepareMetadataTable <- function(allowableIds, grouping, metadataFieldName='Read
 	metaUnfilter$HasCDR3s <- c(FALSE)
 	metaUnfilter$HasCDR3s[metaUnfilter$NumCDR3s > 0] <- c(TRUE)
 
-	metaUnfilter$EstimatedLibrarySize <- as.numeric(gsub(',','',metaUnfilter$EstimatedLibrarySize))
+	#metaUnfilter$EstimatedLibrarySize <- as.numeric(gsub(',','',metaUnfilter$EstimatedLibrarySize))
 	if (is.character(grouping)){
 	  metaUnfilter$GroupCol <- as.factor(metaUnfilter[[grouping]])  
 	} else if(is.data.frame(grouping)) {
@@ -70,9 +97,9 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize 
   
   metaUnfilter$TotalNonZeroFeatures <- colSums(geneCountMatrix != 0)
   
-  origRows <- nrow(metaUnfilter)
-  metaUnfilter <- metaUnfilter[metaUnfilter$EstimatedLibrarySize > minLibrarySize,]
-  print(paste0('rows dropped due to library size: ', (origRows - nrow(metaUnfilter))))
+  #origRows <- nrow(metaUnfilter)
+  #metaUnfilter <- metaUnfilter[metaUnfilter$EstimatedLibrarySize > minLibrarySize,]
+  #print(paste0('rows dropped due to library size: ', (origRows - nrow(metaUnfilter))))
   
   origRows <- nrow(metaUnfilter)
   metaUnfilter <- metaUnfilter[is.na(metaUnfilter$Status),]	
@@ -101,38 +128,85 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize 
 pullTCRMetaFromLabKey <- function(requireOuputFileId=TRUE){
 	df <- labkey.selectRows(
 		baseUrl="https://prime-seq.ohsu.edu", 
-		folderPath="/Internal/Bimber/145", 
-		schemaName="lists", 
-		queryName="TCR_Datasets", 
+		folderPath="/Labs/Bimber/", 
+		schemaName="tcrdb", 
+		queryName="cdnas", 
 		viewName="", 
-		colSelect=c('ReadsetId/rowid','ReadsetId','ReadsetId/application','ReadsetId/TotalForwardReads','ReadsetId/status','ReadsetId/workbook','StimId','StimId/AnimalId','StimId/Date','StimId/Peptide','StimId/Treatment','Population','Replicate','Cells','StimId/ActivatedFreq','CellClass','StimId/Background','ReadsetId/numCDR3s','ReadsetId/distinctLoci','ReadsetId/numTcrRuns','SequenceComments','GroupId','GeneTable','Activated','Metadata/geneCountFiles','Metadata/estimatedLibrarySize'), 
+		colSelect=c(
+		  'readsetId','readsetId/status','readsetId/workbook','readsetId/totalForwardReads','readsetId/numCDR3s','readsetId/distinctLoci','readsetId/numTcrRuns',
+		  'sortId', 'sortId/stimId','sortId/stimId/animalId','sortId/stimId/date','sortId/stimId/stim','sortId/stimId/treatment','sortId/stimId/activated','sortId/stimId/background',
+		  'sortId/population','sortId/replicate','sortId/cells', "rowid", "sortid/stimid/peptide/category", "sortid/stimid/peptide/type"
+		),
 		containerFilter=NULL,
 		colNameOpt='rname'
 	)
 
 	#print(str(df))
 	
-	df$AnimalId <- df$stimid_animalid
-	df$ReadsetId <- df$readsetid
-	df$EstimatedLibrarySize <- df$metadata_estimatedlibrarysize
-	df$TotalForwardReads <- df$readsetid_totalforwardreads
-	df$Peptide <- as.factor(df$stimid_peptide)
-	df$CellClass <- df$cellclass
-	df$NumCDR3s <- df$readsetid_numcdr3s
-	df$Population <- df$population
-	df$Treatment <- as.factor(df$stimid_treatment)
-	df$DistinctLoci <- as.factor(df$readsetid_distinctloci)
-	df$OutputFileId <- as.integer(df$metadata_genecountfiles)
-	df$Application <- as.factor(df$readsetid_application)
+	names(df)[names(df)=="readsetid"] <- "ReadsetId"
+	df$ReadsetId <- as.integer(df$ReadsetId)
 	
-	origRows <- nrow(df)
-	if (requireOuputFileId){
-	  df <- df[!is.na(df$OutputFileId),]  
-	  print(paste0('rows lacking outputfile: ',(origRows - nrow(df))))
+	names(df)[names(df)=="readsetid_totalforwardreads"] <- "TotalForwardReads"
+	df$TotalForwardReads <- as.integer(df$TotalForwardReads)
+	
+	names(df)[names(df)=="readsetid_numcdr3s"] <- "NumCDR3s"
+	df$NumCDR3s <- as.integer(df$NumCDR3s)
+	
+	names(df)[names(df)=="readsetid_distinctloci"] <- "DistinctLoci"
+	df$DistinctLoci <- as.factor(df$DistinctLoci)
+	
+	names(df)[names(df)=="readsetid_status"] <- "Status"
+	df$Status <- as.factor(df$Status)
+	
+	names(df)[names(df)=="sortid_stimid_animalid"] <- "AnimalId"
+	df$AnimalId <- as.factor(df$AnimalId)
+	
+	names(df)[names(df)=="sortid_stimid_date"] <- "SampleDate"
+	names(df)[names(df)=="rowid"] <- "DatasetId"
+	
+	names(df)[names(df)=="sortid_cells"] <- "Cells"
+	df$Cells <- as.integer(df$Cells)
+	
+	names(df)[names(df)=="sortid_replicate"] <- "Replicate"
+	df$Replicate <- as.factor(df$Replicate)
+	
+	names(df)[names(df)=="sortid"] <- "SortId"
+	df$SortId <- as.factor(df$SortId)
+	
+	df$IsSingleCell <- df['Cells'] == 1
+	
+	#TODO: consider if this is the best approach
+	df$Replicate[df$IsSingleCell] <- c(NA)
+	
+	names(df)[names(df)=="sortid_stimid_treatment"] <- "Treatment"
+	df$Treatment <- as.factor(df$Treatment)
+	
+	names(df)[names(df)=="sortid_stimid_stim"] <- "Peptide"
+	df$Peptide <- as.factor(df$Peptide)
+	
+	names(df)[names(df)=="sortid_stimid_peptide_category"] <- "StimCategory"
+	df$StimCategory <- as.factor(df$StimCategory)
+	
+	names(df)[names(df)=="sortid_stimid_peptide_type"] <- "StimType"
+	df$StimType <- as.factor(df$StimType)
+
+		names(df)[names(df)=="sortid_population"] <- "Population"
+	df$Population <- as.factor(df$Population)
+	
+	names(df)[names(df)=="sortid_stimid"] <- "StimId"
+	df$StimId <- as.factor(df$StimId)
+	
+	df$Label <- as.character(df$Peptide)
+	
+	if (replicateAsSuffix){
+	  df$Label[!is.na(df$Replicate)] <- paste0(df$Label[!is.na(df$Replicate)], '_', df$Replicate[!is.na(df$Replicate)])  
 	}
 	
-	df$Status <- df$readsetid_status
+	df$Label[df$IsSingleCell] <- paste0(df$Label[df$IsSingleCell], '**')
 	
+	#TODO: restore this
+	#df$EstimatedLibrarySize <- df$metadata_estimatedlibrarysize
+
 	df$Activated <- c(FALSE)
 	df$Activated[df$Treatment == 'TAPI-0' & df$Population == 'TNF-Pos'] <- c(TRUE)
 
@@ -144,7 +218,7 @@ downloadGenotypes <- function(readsetIds, genomeName, targetField = 'lineages', 
 
 	df2 <- labkey.selectRows(
   	baseUrl="https://prime-seq.ohsu.edu", 
-  	folderPath="/Internal/Bimber", 
+  	folderPath="/Labs/Bimber", 
   	schemaName="sequenceanalysis", 
   	queryName="sequence_analyses", 
   	colFilter=makeFilter(c("readset", "IN", paste0(readsetIds, collapse=';')), c("library_id/name", "EQUALS", genomeName), c('totalSbtReads', 'GT', 0)),
@@ -161,7 +235,7 @@ downloadGenotypes <- function(readsetIds, genomeName, targetField = 'lineages', 
 
 	df3 <- labkey.selectRows(
   	baseUrl="https://prime-seq.ohsu.edu", 
-  	folderPath="/Internal/Bimber", 
+  	folderPath="/Labs/Bimber", 
   	schemaName="sequenceanalysis", 
   	queryName="alignment_summary_by_lineage", 
   	colFilter=makeFilter(c("analysis_id", "IN", paste0(analysisIds, collapse=';')), c('totalLineages', 'EQUALS', 1)),

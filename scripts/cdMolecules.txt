@@ -1,0 +1,395 @@
+GeneSymbol	FullName	PreviousSymbols	Synonyms	Chromosome
+CD1A	CD1a molecule	CD1		1q23.1
+CD1B	CD1b molecule	CD1		1q23.1
+CD1C	CD1c molecule	CD1		1q23.1
+CD1D	CD1d molecule			1q23.1
+CD1E	CD1e molecule			1q23.1
+CD2	CD2 molecule	SRBC		1p13.1
+CD3D	CD3d molecule	T3D		11q23.3
+CD3E	CD3e molecule			11q23.3
+CD3G	CD3g molecule			11q23.3
+CD4	CD4 molecule			12p13.31
+CD5	CD5 molecule	LEU1	T1	11q12.2
+CD6	CD6 molecule		Tp120	11q12.2
+CD7	CD7 molecule		GP40,LEU-9,TP41,Tp40	17q25.3
+CD8A	CD8a molecule	CD8		2p11.2
+CD8B	CD8b molecule	CD8B1		2p11.2
+CD9	CD9 molecule	MIC3	BA2,P24,TSPAN29,MRP-1	12p13.31
+MME	membrane metalloendopeptidase		NEP,CD10,CALLA	3q25.2
+ITGAL	integrin subunit alpha L	CD11A	LFA-1	16p11.2
+ITGAM	integrin subunit alpha M	CD11B, CR3A	MAC-1,CD11b	16p11.2
+ITGAX	integrin subunit alpha X	CD11C	CD11c	16p11.2
+ITGAD	integrin subunit alpha D		CD11d,ADB2	16p11.2
+ANPEP	alanyl aminopeptidase, membrane	CD13, PEPN	LAP1,gp150,p150	15q26.1
+CD14	CD14 molecule			5q31.3
+FUT4	fucosyltransferase 4	ELFT, FCT3A, CD15	FUC-TIV	11q21
+FCGR3A	Fc fragment of IgG receptor IIIa	FCGR3, FCG3	CD16a,CD16	1q23.3
+FCGR3B	Fc fragment of IgG receptor IIIb	FCGR3, FCG3	CD16,CD16b	1q23.3
+ITGB2	integrin subunit beta 2	MFI7, CD18	LFA-1,MAC-1	21q22.3
+CD19	CD19 molecule			16p11.2
+MS4A1	membrane spanning 4-domains A1	CD20	B1,Bp35,MS4A2	11q12.2
+CR2	complement C3d receptor 2		CD21,C3DR	1q32.2
+CD22	CD22 molecule		SIGLEC-2,SIGLEC2	19q13.12
+FCER2	Fc fragment of IgE receptor II	CD23A, FCE2	CLEC4J,CD23	19p13.2
+CD24	CD24 molecule		CD24A	6q21
+IL2RA	interleukin 2 receptor subunit alpha	IL2R, IDDM10	CD25	10p15.1
+DPP4	dipeptidyl peptidase 4	CD26, ADCP2	DPPIV	2q24.2
+CD27	CD27 molecule	TNFRSF7	S152,Tp55	12p13.31
+CD28	CD28 molecule			2q33.2
+CTLA4	cytotoxic T-lymphocyte associated protein 4	CELIAC3, IDDM12	CD152,CD,GSE	2q33.2
+ITGB1	integrin subunit beta 1	FNRB, MSK12, MDF2	GPIIA,CD29	10p11.22
+TNFRSF8	TNF receptor superfamily member 8	D1S166E, CD30	KI-1	1p36.22
+PECAM1	platelet and endothelial cell adhesion molecule 1		CD31	17q23.3
+FCGR2A	Fc fragment of IgG receptor IIa	FCG2, FCGR2A1, FCGR2	CDw32,IGFR2,CD32A,CD32	1q23.3
+FCGR2B	Fc fragment of IgG receptor IIb	FCG2, FCGR2	CD32B,CD32	1q23.3
+FCGR2C	Fc fragment of IgG receptor IIc (gene/pseudogene)		CD32C,hFcRII-C	1q23.3
+CD33	CD33 molecule		SIGLEC3,SIGLEC-3,p67,FLJ00391	19q13.41
+CD34	CD34 molecule			1q32.2
+CR1	complement C3b/C4b receptor 1 (Knops blood group)		CD35,KN	1q32.2
+CD36	CD36 molecule		SCARB3,GPIV,FAT,GP4,GP3B	7q21.11
+CD37	CD37 molecule		TSPAN26	19q13.33
+CD38	CD38 molecule			4p15.32
+ENTPD1	ectonucleoside triphosphate diphosphohydrolase 1	CD39	NTPDase-1,ATPDase,SPG64	10q24.1
+CD40	CD40 molecule	TNFRSF5	p50,Bp50	20q13.12
+ITGA2B	integrin subunit alpha 2b	GP2B	CD41B,PPP1R93,CD41	17q21.31
+GP9	glycoprotein IX platelet		CD42a,GPIX	3q21.3
+GP1BA	glycoprotein Ib platelet alpha subunit	GP1B	GPIbalpha,CD42b	17p13.2
+GP1BB	glycoprotein Ib platelet beta subunit		CD42c,GPIbbeta	22q11.21
+GP5	glycoprotein V platelet		CD42d	3q29
+SPN	sialophorin		GPL115,CD43,LSN	16p11.2
+CD44	CD44 molecule (Indian blood group)	MIC4, MDU2, MDU3	IN,MC56,Pgp1,CD44R,HCELL,CSPG8	11p13
+PTPRC	protein tyrosine phosphatase, receptor type C	CD45	LCA,T200,GP180	1q31.3-q32.1
+CD46	CD46 molecule	MIC10, MCP	TRA2.10,MGC26544,TLX	1q32.2
+CD47	CD47 molecule	MER6	IAP,OA3	3q13.12
+CD48	CD48 molecule	BCM1	BLAST,mCD48,hCD48,SLAMF2	1q23.3
+ITGA1	integrin subunit alpha 1		CD49a,VLA1	5q11.2
+ITGA2	integrin subunit alpha 2	CD49B	CD49b	5q11.2
+ITGA3	integrin subunit alpha 3	MSK18	GAP-B3,CD49c,VLA3a,VCA-2	17q21.33
+ITGA4	integrin subunit alpha 4	CD49D	CD49d	2q31.3
+ITGA5	integrin subunit alpha 5	FNRA	CD49e	12q13.13
+ITGA6	integrin subunit alpha 6		CD49f	2q31.1
+ICAM3	intercellular adhesion molecule 3		ICAM-R,CD50,CDW50	19p13.2
+ITGAV	integrin subunit alpha V	VNRA, MSK8, VTNR	CD51	2q32.1
+CD52	CD52 molecule	CDW52	HE5,EDDM5	1p36.11
+CD53	CD53 molecule	MOX44	TSPAN25	1p13.3
+ICAM1	intercellular adhesion molecule 1		BB2,CD54	19p13.2
+CD55	CD55 molecule (Cromer blood group)	DAF	CR,TC,CROM	1q32.2
+NCAM1	neural cell adhesion molecule 1		CD56,NCAM	11q23.2
+B3GAT1	beta-1,3-glucuronyltransferase 1	CD57, LEU7	GlcAT-P,HNK-1,NK-1	11q25
+CD58	CD58 molecule	LFA3		1p13.1
+CD59	CD59 molecule (CD59 blood group)	MIC11, MIN1, MSK21, MIN2, MIN3	16.3A5,EJ16,EJ30,EL32,G344,p18-20	11p13
+ITGB3	integrin subunit beta 3	GP3A	CD61,GPIIIa	17q21.32
+SELE	selectin E	ELAM1, ELAM	ESEL,CD62E	1q24.2
+SELL	selectin L	LYAM1, LNHR	Leu-8,LSEL,LAM1,hLHRc,LAM-1,PLNHR,CD62L,Lyam-1	1q24.2
+SELP	selectin P	GRMP	CD62P,PSEL,CD62,GMP140,PADGEM	1q24.2
+CD63	CD63 molecule	MLA1	ME491,TSPAN30	12q13.2
+FCGR1A	Fc fragment of IgG receptor Ia		CD64A,CD64	1q21.2
+CEACAM1	carcinoembryonic antigen related cell adhesion molecule 1	BGP	CD66a,BGP1	19q13.2
+CEACAM8	carcinoembryonic antigen related cell adhesion molecule 8	CGM6	CD66b	19q13.2
+CEACAM6	carcinoembryonic antigen related cell adhesion molecule 6	NCA	CD66c	19q13.2
+CEACAM3	carcinoembryonic antigen related cell adhesion molecule 3	CGM1	CD66d	19q13.2
+CEACAM5	carcinoembryonic antigen related cell adhesion molecule 5	CEA	CD66e	19q13.2
+PSG1	pregnancy specific beta-1-glycoprotein 1	PSBG1	PBG1,PSGGA,CD66f	19q13.2
+CD68	CD68 molecule		SCARD1,macrosialin,GP110,DKFZp686M18236,LAMP4	17p13.1
+CD69	CD69 molecule		CLEC2C	12p13.31
+CD70	CD70 molecule	CD27LG, TNFSF7	CD27L	19p13.3
+TFRC	transferrin receptor		p90,TFR1,CD71	3q29
+CD72	CD72 molecule		LYB2,CD72b	9p13.3
+NT5E	5'-nucleotidase ecto	NT5	CALJA,eN,eNT,CD73	6q14.3
+CD74	CD74 molecule	DHLAG		5q33.1
+CD79A	CD79a molecule	IGA	MB-1	19q13.2
+CD79B	CD79b molecule	IGB	B29	17q23.3
+CD80	CD80 molecule	CD28LG, CD28LG1	B7.1,B7-1	3q13.33
+CD81	CD81 molecule	TAPA1	TAPA-1,TSPAN28	11p15.5
+CD82	CD82 molecule	ST6, KAI1	R2,IA4,TSPAN27	11p11.2
+CD83	CD83 molecule		HB15,BL11	6p23
+CD84	CD84 molecule		SLAMF5,hCD84,mCD84	1q23.3
+LILRB3	leukocyte immunoglobulin like receptor B3		PIRB,CD85a,LIR3,HL9,PIR-B,LIR-3,ILT5	19q13.42
+LILRA6	leukocyte immunoglobulin like receptor A6	LILRB6	CD85b,ILT8	19q13.42
+LILRB5	leukocyte immunoglobulin like receptor B5		LIR8,LIR-8,CD85c	19q13.4
+LILRB2	leukocyte immunoglobulin like receptor B2		ILT4,CD85d,LIR2,LIR-2,MIR10,MIR-10	19q13.4
+LILRA3	leukocyte immunoglobulin like receptor A3		HM31,LIR-4,ILT6,HM43,CD85e,LIR4	19q13.4 alternate reference locus
+LILRA5	leukocyte immunoglobulin like receptor A5	LILRB7	CD85f,CD85,LIR9,ILT11	19q13.42
+LILRA4	leukocyte immunoglobulin like receptor A4		CD85g,ILT7	19q13.42
+LILRA2	leukocyte immunoglobulin like receptor A2		LIR-7,LIR7,CD85h,ILT1	19q13.4
+LILRA1	leukocyte immunoglobulin like receptor A1		CD85i,LIR-6,LIR6	19q13.42
+LILRB1	leukocyte immunoglobulin like receptor B1		PIRB,ILT2,MIR-7,CD85,PIR-B,LIR1,CD85j,LIR-1	19q13.42
+LILRB4	leukocyte immunoglobulin like receptor B4		HM18,LIR-5,ILT3,LIR5,CD85k	19q13.42
+LILRP1	leukocyte immunoglobulin-like receptor pseudogene 1		CD85l,LILRA6P,ILT9	19q13.42
+LILRP2	leukocyte immunoglobulin-like receptor pseudogene 2		CD85m,ILT10	19q13.42
+CD86	CD86 molecule	CD28LG2	B7.2,B7-2	3q13.33
+PLAUR	plasminogen activator, urokinase receptor		CD87,UPAR,URKR	19q13
+C5AR1	complement C5a receptor 1	C5R1	CD88,C5AR,C5A	19q13.32
+FCAR	Fc fragment of IgA receptor		CD89	19q13.42
+THY1	Thy-1 cell surface antigen		CD90	11q23.3
+LRP1	LDL receptor related protein 1	APR, A2MR, IGFBP3R1, IGFBP-3R	LRP1A,LRP,APOER,CD91	12q13.3
+SLC44A1	solute carrier family 44 member 1	CDW92	CDw92,CHTL1,CTL1,CD92	9q31.1-q31.2
+CD93	CD93 molecule	MXRA4, C1QR1	C1qRP,C1qR(P),dJ737E23.1,CDw93,ECSM3	20p11.21
+KLRD1	killer cell lectin like receptor D1	CD94		12p13
+FAS	Fas cell surface death receptor	FAS1, APT1, TNFRSF6	CD95,APO-1	10q23.31
+CD96	CD96 molecule		TACTILE	3q13.13-q13.2
+ADGRE5	adhesion G protein-coupled receptor E5	CD97	TM7LN1	19p13.12
+SLC7A5	solute carrier family 7 member 5		MPE16,CD98,D16S469E,LAT1,E16	16q24.2
+CD99	CD99 molecule (Xg blood group)	MIC2		Xp22.32 and Yp11.3
+SEMA4D	semaphorin 4D	SEMAJ, C9orf164	FLJ39737,coll-4,CD100	9q22.2
+CD101	CD101 molecule	IGSF2	V7	1p13.1
+ICAM2	intercellular adhesion molecule 2		CD102	17q23.3
+ITGAE	integrin subunit alpha E		CD103,HUMINAE	17p13.2
+ITGB4	integrin subunit beta 4		CD104	17q25.1
+ENG	endoglin	ORW1, ORW	CD105,END,HHT1	9q34.11
+VCAM1	vascular cell adhesion molecule 1		CD106	1p21.2
+LAMP1	lysosomal associated membrane protein 1		CD107a	13q34
+LAMP2	lysosomal associated membrane protein 2		CD107b	Xq24
+SEMA7A	semaphorin 7A (John Milton Hagen blood group)	SEMAL	H-Sema-L,CD108	15q24.1
+CD109	CD109 molecule		FLJ38569,DKFZp762L1111,CPAMD7	6q13
+MPL	MPL proto-oncogene, thrombopoietin receptor		CD110,TPOR	1p34.2
+NECTIN1	nectin cell adhesion molecule 1	HVEC, ED4, PVRL1	PRR1,CLPED1,SK-12,PVRR1,HIgR,PRR,OFC7,CD111	11q23.3
+NECTIN2	nectin cell adhesion molecule 2	HVEB, PVRL2	PVRR2,PRR2,CD112	19q13.32
+NECTIN3	nectin cell adhesion molecule 3	PVRL3	CDw113,CD113,PVRR3,DKFZP566B0846,PPR3,nectin-3	3q13.13
+CSF3R	colony stimulating factor 3 receptor	CD114	GCSFR	1p34.3
+CSF1R	colony stimulating factor 1 receptor	FMS	CSFR,C-FMS,CD115	5q32
+CSF2RA	colony stimulating factor 2 receptor alpha subunit	CSF2R	CD116,alphaGMR	Xp22.32 and Yp11.3
+KIT	KIT proto-oncogene receptor tyrosine kinase	PBT	SCFR,C-Kit,CD117	4q12
+LIFR	LIF receptor alpha		CD118	5p13.1
+IFNGR1	interferon gamma receptor 1	IFNGR	CD119	6q23.3
+TNFRSF1A	TNF receptor superfamily member 1A	TNFR1	TNFR60,TNF-R55,TNFAR,CD120a,TNF-R,TNF-R-I	12p13.31
+TNFRSF1B	TNF receptor superfamily member 1B	TNFR2	TNFBR,TNF-R-II,TNF-R75,TNFR80,p75,CD120b	1p36.22
+IL1R1	interleukin 1 receptor type 1	IL1R, IL1RA	CD121A,D2S1473	2q11.2-q12.1
+IL1R2	interleukin 1 receptor type 2	IL1RB	CD121b	2q11.2
+IL2RB	interleukin 2 receptor subunit beta	IL15RB	CD122	22q12.3
+IL3RA	interleukin 3 receptor subunit alpha		CD123	Xp22.3 and Yp13.3
+IL4R	interleukin 4 receptor		CD124	16p12.1
+IL5RA	interleukin 5 receptor subunit alpha	IL5R	CD125,CDw125	3p26.2
+IL6R	interleukin 6 receptor		CD126	1q21.3
+IL7R	interleukin 7 receptor		CD127	5p13.2
+IL9R	interleukin 9 receptor		CD129	Xq28 and Yq12
+IL6ST	interleukin 6 signal transducer		CD130,GP130	5q11.2
+CSF2RB	colony stimulating factor 2 receptor beta common subunit	IL3RB	IL5RB,betaGMR,CD131	22q12.3
+IL2RG	interleukin 2 receptor subunit gamma	SCIDX1, IMD4, CIDX	CD132	Xq13.1
+PROM1	prominin 1	PROML1, MCDR2, STGD4	CD133,AC133,CORD12,RP41	4p15.32
+TNFRSF4	TNF receptor superfamily member 4	TXGP1L	OX40,CD134,ACT35	1p36.33
+FLT3	fms related tyrosine kinase 3		CD135,FLK2,STK1	13q12.2
+MST1R	macrophage stimulating 1 receptor	RON, PTK8	CD136,CDw136	3p21.31
+TNFRSF9	TNF receptor superfamily member 9	ILA	4-1BB,CD137	1p36.23
+SDC1	syndecan 1	SDC	SYND1,syndecan,CD138	2p24.1
+PDGFRA	platelet derived growth factor receptor alpha		PDGFR2,GAS9,CD140a	4q12
+PDGFRB	platelet derived growth factor receptor beta	PDGFR	PDGFR1,CD140b,JTK12	5q32
+THBD	thrombomodulin		CD141	20p11.21
+F3	coagulation factor III, tissue factor		TF,CD142	1p21.3
+ACE	angiotensin I converting enzyme	DCP1	ACE1,CD143	17q23.3
+CDH5	cadherin 5		CD144,7B4	16q21
+MCAM	melanoma cell adhesion molecule		MUC18,CD146	11q23.3
+BSG	basigin (Ok blood group)	OK	CD147,EMMPRIN	19p13.3
+PTPRJ	protein tyrosine phosphatase, receptor type J		DEP1,CD148,HPTPeta	11p11.2
+SLAMF1	signaling lymphocytic activation molecule family member 1	SLAM	CD150	1q23.3
+CD151	CD151 molecule (Raph blood group)		SFA-1,PETA-3,TSPAN24,RAPH	11p15.5
+TNFSF8	TNF superfamily member 8	CD30LG	CD153	9q32-q33.1
+CD40LG	CD40 ligand	HIGM1, IMD3, TNFSF5	CD154,gp39,TRAP,CD40L,hCD40L	Xq26.3
+PVR	poliovirus receptor	PVS	Tage4,CD155,Necl-5,HVED,NECL5	19q13.31
+ADAM10	ADAM metallopeptidase domain 10		kuz,MADM,HsT18717,CD156c	15q21.3
+ADAM8	ADAM metallopeptidase domain 8		MS2,CD156,CD156a	10q26.3
+ADAM17	ADAM metallopeptidase domain 17	TACE	cSVP,CD156B	2p25.1
+BST1	bone marrow stromal cell antigen 1		CD157	4p15.32
+KIR2DL1	killer cell immunoglobulin like receptor, two Ig domains and long cytoplasmic tail 1		cl-42,nkat1,CD158A,47.11,p58.1	19q13.42
+KIR2DL2	killer cell immunoglobulin like receptor, two Ig domains and long cytoplasmic tail 2		CD158k,CD158B1,cl-43,nkat6	19q13.4 alternate reference locus
+KIR2DL3	killer cell immunoglobulin like receptor, two Ig domains and long cytoplasmic tail 3		nkat2a,nkat2,cl-6,CD158B2,p58,nkat2b	19q13.42
+KIR3DP1	killer cell immunoglobulin like receptor, three Ig domains pseudogene 1		CD158C,KIR3DS2P,KIRX,KIR48,KIR2DS6	19q13.42
+KIR2DL4	killer cell immunoglobulin like receptor, two Ig domains and long cytoplasmic tail 4		CD158D,15.212,103AS	19q13.42
+KIR3DL1	killer cell immunoglobulin like receptor, three Ig domains and long cytoplasmic tail 1	KIR	NKB1,cl-11,CD158e2,cl-2,AMB11,NKB1B,CD158e1/2,CD158E1,nkat3	19q13.42
+KIR2DL5A	killer cell immunoglobulin like receptor, two Ig domains and long cytoplasmic tail 5A		KIR2DL5,CD158F,KIR2DL5.1	19q13.4 alternate reference locus
+KIR2DS5	killer cell immunoglobulin like receptor, two Ig domains and short cytoplasmic tail 5		nkat9,CD158G	19q13.4 alternate reference locus
+KIR2DS1	killer cell immunoglobulin like receptor, two Ig domains and short cytoplasmic tail 1		EB6ActII,EB6ActI,CD158H	19q13.4 alternate reference locus
+KIR2DS4	killer cell immunoglobulin like receptor, two Ig domains and short cytoplasmic tail 4		cl-39,KKA3,nkat8,CD158i	19q13.42
+KIR2DS2	killer cell immunoglobulin like receptor, two Ig domains and short cytoplasmic tail 2		cl-49,nkat5,CD158J,183ActI	19q13.4 alternate reference locus
+KIR3DL2	killer cell immunoglobulin like receptor, three Ig domains and long cytoplasmic tail 2		nkat4a,cl-5,CD158K,nkat4,nkat4b	19q13.42
+KIR3DL3	killer cell immunoglobulin like receptor, three Ig domains and long cytoplasmic tail 3		KIRC1,KIR3DL7,KIR44,CD158z	19q13.42
+KLRC1	killer cell lectin like receptor C1	NKG2	NKG2-A,NKG2-B,CD159a	12p13
+KLRC2	killer cell lectin like receptor C2		NKG2-C,CD159c	12p13
+CD160	CD160 molecule		BY55,NK1,NK28	1q21.1
+KLRB1	killer cell lectin like receptor B1	NKR	hNKR-P1A,NKR-P1,NKR-P1A,CLEC5B,CD161	12p13.31
+SELPLG	selectin P ligand		PSGL-1,CD162	12q24.11
+CD163	CD163 molecule		M130,MM130,SCARI1	12p13.31
+CD164	CD164 molecule		MUC-24,MGC-24,DFNA66	6q21
+ALCAM	activated leukocyte cell adhesion molecule		MEMD,CD166	3q13.11
+DDR1	discoidin domain receptor tyrosine kinase 1	NTRK4, PTK3A, NEP, CAK, EDDR1	CD167,RTK6	6p21.33
+HMMR	hyaluronan mediated motility receptor		RHAMM,CD168	5q34
+SIGLEC1	sialic acid binding Ig like lectin 1	SN	sialoadhesin,CD169,SIGLEC-1,FLJ00051,FLJ32150,dJ1009E24.1,FLJ00073,FLJ00055	20p13
+SIGLEC5	sialic acid binding Ig like lectin 5	CD33L2	SIGLEC-5,CD170,OB-BP2	19q13.41
+L1CAM	L1 cell adhesion molecule	HSAS1, SPG1, HSAS, MASA, MIC5, S10	CD171	Xq28
+SIRPA	signal regulatory protein alpha	PTPNS1	SIRPalpha2,SIRP,SHPS-1,SIRP-ALPHA-1,SIRPalpha,P84,CD172a,BIT,SHPS1,MFR,MYD-1	20p13
+SIRPB1	signal regulatory protein beta 1		CD172b,SIRP-BETA-1	20p13
+SIRPG	signal regulatory protein gamma	SIRPB2	SIRPgamma,CD172g,SIRP-B2,bA77C3.1	20p13
+FUT3	fucosyltransferase 3 (Lewis blood group)	LE	CD174	19p13.3
+CD177	CD177 molecule		PRV1,HNA2A,NB1	19q13.31
+FASLG	Fas ligand	APT1LG1, TNFSF6	CD178,FasL	1q24.3
+VPREB1	V-set pre-B cell surrogate light chain 1		VpreB,CD179A	22q11.22
+IGLL1	immunoglobulin lambda like polypeptide 1	IGLL	IGL5,IGVPB,14.1,CD179B	22q11.23
+CD180	CD180 molecule	LY64	RP105,Ly78	5q12.3
+CXCR1	C-X-C motif chemokine receptor 1	CMKAR1, IL8RA	CDw128a,CKR-1,CD181	2q35
+CXCR2	C-X-C motif chemokine receptor 2	IL8RB	CD182,CMKAR2	2q35
+CXCR3	C-X-C motif chemokine receptor 3	GPR9	IP10-R,CD183,CKR-L2,CMKAR3,MigR	Xq13.1
+CXCR4	C-X-C motif chemokine receptor 4		NPYR,NPY3R,NPYY3R,HM89,fusin,HSY3RR,CD184,D2S201E,LESTR	2q22.1
+CXCR5	C-X-C motif chemokine receptor 5	BLR1	MDR15,CD185	11q23.3
+CXCR6	C-X-C motif chemokine receptor 6		BONZO,CD186,TYMSTR,STRL33	3p21.31
+CCR1	C-C motif chemokine receptor 1	SCYAR1, CMKBR1	MIP1aR,CKR-1,CD191	3p21.31
+CCR2	C-C motif chemokine receptor 2	CMKBR2	FLJ78302,MCP-1-R,CC-CKR-2,CD192,CKR2	3p21.31
+CCR3	C-C motif chemokine receptor 3	CMKBR3	CC-CKR-3,CKR3,CD193	3p21.31
+CCR4	C-C motif chemokine receptor 4		CMKBR4,CD194,ChemR13,k5-5,CKR4,CC-CKR-4	3p22.3
+CCR5	C-C motif chemokine receptor 5 (gene/pseudogene)	CMKBR5	CD195,CKR5,CC-CKR-5,IDDM22,CKR-5	3p21.31
+CCR6	C-C motif chemokine receptor 6	STRL22	CD196,CKR-L3,DRY-6,BN-1,GPR29,DCR2,GPR-CY4,CMKBR6	6q27
+CCR7	C-C motif chemokine receptor 7	CMKBR7, EBI1	CDw197,BLR2,CD197	17q21.2
+CCR8	C-C motif chemokine receptor 8	CMKBRL2, CMKBR8	CY6,TER1,CKR-L1,GPR-CY6,CDw198	3p22.1
+CCR9	C-C motif chemokine receptor 9	GPR28	GPR-9-6,CDw199	3p21.31
+CD200	CD200 molecule	MOX1, MOX2	MRC,OX-2	3q13.2
+PROCR	protein C receptor		EPCR,CCD41,CD201	20q11.22
+TEK	TEK receptor tyrosine kinase	VMCM	TIE2,VMCM1,CD202b,TIE-2	9p21.2
+ENPP3	ectonucleotide pyrophosphatase/phosphodiesterase 3	PDNP3	B10,gp130RB13-6,PD-IBETA,CD203c	6q23.2
+MSR1	macrophage scavenger receptor 1		SR-A,SR-AIII,SR-AII,SCARA1,SR-AI,CD204	8p22
+LY75	lymphocyte antigen 75		CLEC13B,CD205,DEC-205	2q24.2
+MRC1	mannose receptor C-type 1	MRC1L1	CD206,bA541I19.1,CLEC13D,CLEC13DL	10p12.33
+CD207	CD207 molecule		Langerin,CLEC4K	2p13.3
+LAMP3	lysosomal associated membrane protein 3		TSC403,LAMP,DC-LAMP,CD208,DCLAMP	3q27.1
+CD209	CD209 molecule		DC-SIGN,CDSIGN,DC-SIGN1,CLEC4L	19p13.2
+IL10RA	interleukin 10 receptor subunit alpha	IL10R	CD210a,CD210,HIL-10R,CDW210A	11q23.3
+IL10RB	interleukin 10 receptor subunit beta	CRFB4, D21S58, D21S66	CRF2-4,CDW210B,IL-10R2	21q22.11
+IL12RB1	interleukin 12 receptor subunit beta 1	IL12RB	CD212	19p13.11
+IL13RA1	interleukin 13 receptor subunit alpha 1		CD213a1,IL-13Ra,NR4	Xq24
+IL13RA2	interleukin 13 receptor subunit alpha 2		IL-13R,CD213a2,CT19,IL13BP	Xq23
+IL15RA	interleukin 15 receptor subunit alpha		IL-15RA,CD215	10p15.1
+IL17RA	interleukin 17 receptor A	IL17R	CD217,CDw217,IL-17RA,hIL-17R	22q11.1
+IL18R1	interleukin 18 receptor 1		CD218a,IL-1Rrp,IL1RRP	2q12.1
+IL18RAP	interleukin 18 receptor accessory protein		AcPL,CD218b	2q12.1
+INSR	insulin receptor		CD220	19p13.2
+IGF1R	insulin like growth factor 1 receptor		IGFR,MGC18216,IGFIR,JTK13,CD221	15q26.3
+IGF2R	insulin like growth factor 2 receptor		CD222,MPR300,CI-MPR,MPRI,MPR1,CI-M6PR,M6P-R,CIMPR	6q25.3
+LAG3	lymphocyte activating 3		CD223	12p13.31
+GGT1	gamma-glutamyltransferase 1	GGT	D22S732,D22S672,CD224	22q11.23
+IFITM1	interferon induced transmembrane protein 1	IFI17	9-27,CD225	11p15.5
+CD226	CD226 molecule		DNAM-1,DNAM1,PTA1,TLiSA1	18q22.2
+MUC1	mucin 1, cell surface associated	PUM, MCKD1	ADMCKD1,MCD,MCKD,ADMCKD,PEM,CD227	1q22
+MELTF	melanotransferrin	MFI2	CD228,MTF1,FLJ38863,MTf,MGC4856,MAP97	3q29
+LY9	lymphocyte antigen 9		mLY9,CD229,SLAMF3,hly9	1q23.3
+PRNP	prion protein	PRIP, GSS, CJD	CD230,AltPrP,PRP	20p13
+TSPAN7	tetraspanin 7	MXS1, TM4SF2, MRX58	CD231,DXS1692E,A15,TALLA-1	Xp11.4
+PLXNC1	plexin C1		CD232,VESPR	12q22
+SLC4A1	solute carrier family 4 member 1 (Diego blood group)	EPB3, AE1, DI, WD	CD233,SW,RTA1A,FR,WR	17q21.31
+ACKR1	atypical chemokine receptor 1 (Duffy blood group)	FY, DARC	GPD,CD234,Dfy,CCBP1	1q23.2
+GYPA	glycophorin A (MNS blood group)	MNS	GPA,CD235a,MN	4q31.21
+GYPB	glycophorin B (MNS blood group)	MNS	CD235b,GPB,SS	4q31.21
+GYPC	glycophorin C (Gerbich blood group)		GYPD,CD236,GPC,Ge,CD236R	2q14.3
+KEL	Kell blood group, metallo-endopeptidase		CD238,ECE3	7q34
+BCAM	basal cell adhesion molecule (Lutheran blood group)	LU	CD239	19q13.32
+RHCE	Rh blood group CcEe antigens	RH	CD240CE	1p36.11
+RHD	Rh blood group D antigen	RH	RhII,Rh4,DIIIc,Rh30a,CD240D,RhPI	1p36.11
+RHAG	Rh associated glycoprotein		RH50A,CD241,SLC42A1	6p12.3
+ICAM4	intercellular adhesion molecule 4 (Landsteiner-Wiener blood group)	LW	CD242	19p13.2
+ABCB1	ATP binding cassette subfamily B member 1	PGY1, MDR1, CLCS	CD243,GP170,P-gp,ABC20	7q21.12
+CD244	CD244 molecule		2B4,NAIL,NKR2B4,Nmrk,SLAMF4	1q23.3
+ALK	ALK receptor tyrosine kinase		CD246	2p23.2-p23.1
+CD247	CD247 molecule	CD3Z	CD3H,CD3Q	1q24.2
+CD248	CD248 molecule	CD164L1	TEM1	11q13.2
+ENPEP	glutamyl aminopeptidase		gp160,CD249	4q25
+TNFSF4	TNF superfamily member 4	TXGP1	CD252,gp34,OX-40L	1q25.1
+TNFSF10	TNF superfamily member 10		TL2,Apo-2L,CD253,TRAIL	3q26
+TNFSF11	TNF superfamily member 11		RANKL,ODF,CD254,OPGL,TRANCE	13q14
+TNFSF13	TNF superfamily member 13		APRIL,CD256	17p13.1
+TNFSF13B	TNF superfamily member 13b	TNFSF20	TALL-1,THANK,CD257,TALL1,BLYS,BAFF	13q33.3
+TNFSF14	TNF superfamily member 14		LTg,CD258,HVEM-L,LIGHT	19p13.3
+TNFRSF10A	TNF receptor superfamily member 10a		TRAILR1,DR4,CD261,Apo2,TRAILR-1	8p21.3
+TNFRSF10B	TNF receptor superfamily member 10b		TRICKB,TRAIL-R2,DR5,CD262,TRAILR2,TRICK2A,KILLER	8p21.3
+TNFRSF10C	TNF receptor superfamily member 10c		CD263,DcR1,LIT,TRAILR3,TRID	8p21.3
+TNFRSF10D	TNF receptor superfamily member 10d		CD264,TRUNDD,DcR2,TRAILR4	8p21.3
+TNFRSF11A	TNF receptor superfamily member 11a	PDB2, LOH18CR1	FEO,CD265,RANK	18q21.33
+TNFRSF12A	TNF receptor superfamily member 12A		CD266,FN14,TweakR	16p13.3
+TNFRSF13B	TNF receptor superfamily member 13B		CD267,TACI,IGAD2	17p11.2
+TNFRSF13C	TNF receptor superfamily member 13C		BAFFR,CD268	22q13.2
+TNFRSF17	TNF receptor superfamily member 17	BCMA	CD269,BCM,TNFRSF13A	16p13.13
+TNFRSF14	TNF receptor superfamily member 14		ATAR,LIGHTR,HVEM,CD270,HVEA,TR2	1p36.32
+NGFR	nerve growth factor receptor		TNFRSF16,p75NTR,CD271	17q21.33
+BTLA	B and T lymphocyte associated		CD272,BTLA1	3q13.2
+PDCD1LG2	programmed cell death 1 ligand 2		Btdc,PDL2,CD273,B7-DC,bA574F11.2,PD-L2	9p24.1
+CD274	CD274 molecule	PDCD1LG1	B7-H,B7H1,PD-L1,PDL1,B7-H1	9p24.1
+ICOSLG	inducible T cell costimulator ligand	ICOSL	B7RP1,B7RP-1,KIAA0653,GL50,CD275,ICOS-L,B7H2,B7-H2	21q22.3
+CD276	CD276 molecule		B7-H3,B7H3,B7RP-2	15q24.1
+BTN3A1	butyrophilin subfamily 3 member A1		BTN3.1,BT3.1,CD277,BTF5	6p22.2
+ICOS	inducible T cell costimulator		CD278,AILIM	2q33.2
+PDCD1	programmed cell death 1	SLEB2	CD279,PD1,PD-1,hSLE1	2q37.3
+MRC2	mannose receptor C type 2		ENDO180,CD280,KIAA0709,CLEC13E	17q23
+TLR1	toll like receptor 1		KIAA0012,rsc786,CD281	4p14
+TLR2	toll like receptor 2		CD282,TIL4	4q31.3
+TLR3	toll like receptor 3		CD283	4q35.1
+TLR4	toll like receptor 4		ARMD10,TLR-4,hToll,CD284	9q33.1
+TLR6	toll like receptor 6		CD286	4p14
+TLR8	toll like receptor 8		CD288	Xp22.2
+TLR9	toll like receptor 9		CD289	3p21.2
+TLR10	toll like receptor 10		CD290	4p14
+BMPR1A	bone morphogenetic protein receptor type 1A	ACVRLK3	CD292,ALK3	10q23.2
+BMPR1B	bone morphogenetic protein receptor type 1B		ALK6,CDw293	4q22.3
+PTGDR2	prostaglandin D2 receptor 2	GPR44	CD294,DP2,CRTH2	11q12.2
+LEPR	leptin receptor		OBR,CD295	1p31.3
+ART1	ADP-ribosyltransferase 1		CD296,ART2	11p15.4
+ART4	ADP-ribosyltransferase 4 (Dombrock blood group)	DO	DOK1,CD297	12p12.3
+ATP1B3	ATPase Na+/K+ transporting subunit beta 3		CD298,FLJ29027	3q23
+CLEC4M	C-type lectin domain family 4 member M	CD299, CD209L	HP10347,DC-SIGNR,LSIGN,DCSIGNR,DC-SIGN2	19p13.2
+CD300A	CD300a molecule		Irp60,CMRF35H,CMRF-35-H9,IRC1,IRC2,IGSF12	17q25.1
+CD300C	CD300c molecule		CMRF35,LIR,CMRF-35A,CMRF35A,IGSF16	17q25.1
+CD300E	CD300e molecule	CD300LE	IREM2,CLM2	17q25.1
+CLEC10A	C-type lectin domain containing 10A	CLECSF13, CLECSF14	HML,CD301,HML2	17p13.1
+CD302	CD302 molecule		DCL-1,KIAA0022,BIMLEC,CLEC13A	2q24.2
+CLEC4C	C-type lectin domain family 4 member C	CLECSF11, CLECSF7	HECL,BDCA2,CD303,DLEC	12p13.31
+NRP1	neuropilin 1		VEGF165R,NRP,CD304	10p11.22
+LAIR1	leukocyte associated immunoglobulin like receptor 1		CD305	19q13.42
+LAIR2	leukocyte associated immunoglobulin like receptor 2		CD306	19q13.42
+FCRL1	Fc receptor like 1		IFGP1,IRTA5,CD307a,FCRH1	1q23.1
+FCRL2	Fc receptor like 2	SPAP1	FCRH2,CD307b,IRTA4	1q23.1
+FCRL3	Fc receptor like 3		SPAP2d,IFGP3,SPAP2a,FCRH3,SPAP2,SPAP2b,IRTA3,CD307c,SPAP2e,SPAP2c	1q23.1
+FCRL4	Fc receptor like 4		IGFP2,FCRH4,CD307d,IRTA1	1q23.1
+FCRL5	Fc receptor like 5		FCRH5,CD307e,BXMAS1,IRTA2	1q23.1
+KDR	kinase insert domain receptor		FLK1,VEGFR2,CD309,VEGFR	4q12
+ADGRE2	adhesion G protein-coupled receptor E2	EMR2	CD312	19p13.12
+KLRK1	killer cell lectin like receptor K1	D12S2489E	KLR,NKG2D,CD314,NKG2-D	12p13.2
+PTGFRN	prostaglandin F2 receptor inhibitor		CD9P-1,FPRP,KIAA1436,FLJ11001,SMAP-6,CD315,EWI-F	1p13.1
+IGSF8	immunoglobulin superfamily member 8		EWI2,PGRL,CD81P3,CD316	1q23.2
+BST2	bone marrow stromal cell antigen 2		CD317,tetherin	19p13.11
+CDCP1	CUB domain containing protein 1		SIMA135,CD318	3p21.31
+SLAMF7	SLAM family member 7		19A,CD319,CRACC,CS1	1q23.3
+CD320	CD320 molecule		8D6,8D6A	19p13.2
+F11R	F11 receptor	JAM1	JAMA,JAM-A,JCAM,PAM-1,CD321,JAM-1	1q23.3
+JAM2	junctional adhesion molecule 2	C21orf43	JAM-B,VE-JAM,CD322,JAMB	21q21.3
+CDH1	cadherin 1	UVO	CD324,uvomorulin	16q22.1
+CDH2	cadherin 2	NCAD	CD325,CDHN	18q12.1
+EPCAM	epithelial cell adhesion molecule	M4S1, MIC18, TACSTD1	KS1/4,TROP1,TACST-1,MK-1,ESA,323/A3,CD326,Ep-CAM,Ly74,EGP40,KSA,17-1A,MOC31,HEA125,CO-17A,MH99,GA733-2,EGP-2,EGP34	2p21
+SIGLEC6	sialic acid binding Ig like lectin 6	CD33L, CD33L1	CD327,SIGLEC-6,OB-BP1	19q13.41
+SIGLEC7	sialic acid binding Ig like lectin 7	SIGLEC19P, SIGLECP2	CD328,QA79,p75/AIRM1,SIGLEC-7	19q13.41
+SIGLEC9	sialic acid binding Ig like lectin 9		CD329	19q13.3-q13.4
+FGFR1	fibroblast growth factor receptor 1	FLT2, KAL2	CEK,N-SAM,H5,BFGFR,FLG,H3,H2,CD331,H4	8p11.23
+FGFR2	fibroblast growth factor receptor 2	KGFR, BEK, CFD1, JWS	CD332,ECT1,TK25,CEK3,TK14,K-SAM	10q26.13
+FGFR3	fibroblast growth factor receptor 3	ACH	JTK4,CD333,CEK2	4p16.3
+FGFR4	fibroblast growth factor receptor 4		CD334,JTK2	5q35.2
+NCR1	natural cytotoxicity triggering receptor 1	LY94	CD335,NK-p46,NKP46	19q13.42
+NCR2	natural cytotoxicity triggering receptor 2	LY95	CD336,NK-p44	6p21.1
+NCR3	natural cytotoxicity triggering receptor 3	LY117	1C7,CD337,NKp30	6p21.33
+ABCG2	ATP binding cassette subfamily G member 2 (Junior blood group)		BCRP,CD338,MXR,ABCP,EST157481	4q22.1
+JAG1	jagged 1	AGS, JAGL1	CD339,AWS,HJ1,AHD	20p12.2
+ERBB2	erb-b2 receptor tyrosine kinase 2	NGL	CD340,HER2,NEU,HER-2	17q12
+FZD4	frizzled class receptor 4	EVR1	CD344	11q14.2
+FZD9	frizzled class receptor 9		FZD3,CD349	7q11.23
+FZD10	frizzled class receptor 10		CD350	12q24.33
+FCAMR	Fc fragment of IgA and IgM receptor		FCA/MR,FKSG87,CD351	1q32.1
+SLAMF6	SLAM family member 6		NTB-A,CD352,SF2000,NTBA,KALIb,Ly108,KALI	1q23.2-q23.3
+SLAMF8	SLAM family member 8		CD353,SBBI42,BLAME	1q23.2
+TREM1	triggering receptor expressed on myeloid cells 1		TREM-1,CD354	6p21.1
+CRTAM	cytotoxic and regulatory T cell molecule		CD355	11q24.1
+TNFRSF18	TNF receptor superfamily member 18		AITR,GITR,CD357	1p36.33
+TNFRSF21	TNF receptor superfamily member 21		CD358,DR6	6p12.3
+IL21R	interleukin 21 receptor		CD360	16p12.1
+EVI2B	ecotropic viral integration site 2B		EVDB,CD361,D17S376	17q11.2
+SDC2	syndecan 2	HSPG, HSPG1	fibroglycan,SYND2,CD362	8q22.1
+S1PR1	sphingosine-1-phosphate receptor 1	EDG1	CD363,D1S3362,edg-1	1p21.2
+PI16	peptidase inhibitor 16		MSMBBP,MGC45378,CD364,dJ90K10.5	6p21.2
+HAVCR1	hepatitis A virus cellular receptor 1		CD365,TIM1,KIM1,HAVCR,TIMD1,TIM-1,HAVCR-1	5q33.3
+CLEC4A	C-type lectin domain family 4 member A	CLECSF6	DCIR,CD367,DDB27	12p13.31
+CLEC4D	C-type lectin domain family 4 member D	CLECSF8	Dectin-3,Mpcl,CD368,MCL	12p13.31
+CLEC7A	C-type lectin domain containing 7A	CLECSF12	hDectin-1,CD369,dectin-1,SCARE2	12p13.2
+CLEC9A	C-type lectin domain containing 9A		HEEE9341,CD370,DNGR-1,UNQ9341	12p13.2
+CLEC12A	C-type lectin domain family 12 member A		CD371,MICL,CLL-1,DCAL-2	12p13.31
