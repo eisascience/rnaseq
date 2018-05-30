@@ -186,12 +186,12 @@ if (length(greatestGenes) > 0){
 	heatmap.2(matrix , labCol=meta$GroupCol, col=my_palette)
 }
 
-pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
+pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'StimCategory'), returnData=TRUE)
 write.table(pc1, file='rld_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
 qplot(PC1,PC2,color=GroupCol,data=pc1)
 qplot(PC1,PC2,color=AnimalId,data=pc1)
 qplot(PC1,PC2,color=Peptide,data=pc1)
-qplot(PC1,PC2,color=CellClass,data=pc1)
+qplot(PC1,PC2,color=StimCategory,data=pc1)
 
 ```
 
@@ -209,12 +209,12 @@ if (file.exists(resumeFile)){
 
 #PCA
 cex1 = 1.5;
-pc1 <- DESeq2::plotPCA(vsd, intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'CellClass'), returnData=TRUE)
+pc1 <- DESeq2::plotPCA(vsd, intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'StimCategory'), returnData=TRUE)
 write.table(pc1, file='vsd_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
 qplot(PC1,PC2,color=GroupCol,data=pc1)
 qplot(PC1,PC2,color=AnimalId,data=pc1)
 qplot(PC1,PC2,color=Peptide,data=pc1)
-qplot(PC1,PC2,color=CellClass,data=pc1)
+qplot(PC1,PC2,color=StimCategory,data=pc1)
 
 
 ```
