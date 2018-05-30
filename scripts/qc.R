@@ -12,8 +12,8 @@ generateQCPlots <- function(counts, meta){
 	nonZero <- colSums(counts > 10)
 	barplot(nonZero,xaxt='n',col=meta$GroupCol, ylab="Genes >10 per sample")
 	
-	qplot(EstimatedLibrarySize, TotalNonZeroFeatures, data=meta, color=Peptide)
+	#qplot(EstimatedLibrarySize, TotalNonZeroFeatures, data=meta, color=Peptide)
 	
-	qplot(EstimatedLibrarySize, TotalNonZeroFeatures, data=meta, color=AnimalId)
+	#qplot(EstimatedLibrarySize, TotalNonZeroFeatures, data=meta, color=AnimalId)
 }
 
