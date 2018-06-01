@@ -62,11 +62,11 @@ addEnsembl <- function(df, geneField = 'Ensembl.Id'){
   return(merge(df, attrs, by.x=geneField, by.y='ensembl_gene_id'))
 }
 
-prepareTables <- function(allowableIds, geneCountTableFile, grouping, minLibrarySize=500000){
+prepareTables <- function(allowableIds, geneCountTableFile, grouping, minLibrarySize=500000, minReads=500000, minFeatures=1000){
   metaUnfilter <- prepareMetadataTable(allowableIds, grouping, 'ReadsetId')
   geneCountMatrix <- parseGeneCountsMatrix(geneCountTableFile, as.character(metaUnfilter$ReadsetId))
   
-  return(prepareMetadataTable2(metaUnfilter, geneCountMatrix, minLibrarySize))
+  return(prepareMetadataTable2(metaUnfilter, geneCountMatrix, minLibrarySize = minLibrarySize, minReads = minReads, minFeatures = minFeatures))
 }
 
 prepareMetadataTable <- function(allowableIds, grouping, metadataFieldName='ReadsetId', groupingDataframe=NULL){
@@ -91,7 +91,7 @@ prepareMetadataTable <- function(allowableIds, grouping, metadataFieldName='Read
 	return(metaUnfilter)
 }
 
-prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize = 2000000, minFeatures = 1000, metadataFieldName='ReadsetId'){
+prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize = 2000000, minFeatures = 1000, metadataFieldName='ReadsetId', minReads=500000){
   #first, limit to only those in the gene table, in case we dropped metadata rows
   metaUnfilter <- metaUnfilter[metaUnfilter[[metadataFieldName]] %in% colnames(geneCountMatrix),]
   
@@ -109,6 +109,10 @@ prepareMetadataTable2 <- function(metaUnfilter, geneCountMatrix, minLibrarySize 
 	metaUnfilter <- metaUnfilter[metaUnfilter$TotalNonZeroFeatures > minFeatures,]
 	print(paste0('rows dropped due to low non-zero features: ', (origRows - nrow(metaUnfilter))))
 	
+	origRows <- nrow(metaUnfilter)
+	metaUnfilter <- metaUnfilter[metaUnfilter$TotalForwardReads >= minReads,]	
+	print(paste0('rows dropped due to low reads: ', (origRows - nrow(metaUnfilter))))
+
 	metaUnfilter$GroupCol <- as.factor(as.character(metaUnfilter$GroupCol))
 	
 	#also update gene table for those dropped rows

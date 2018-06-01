@@ -46,7 +46,7 @@ writeEdgeRTopGenes <- function(qlf2, y_QL, pval = 0.05, outputFile){
 
 doPlotMDS <- function(y_QL, meta){
 	#for mds:
-	for (col in c('AnimalId', 'Peptide', 'Population', 'Activated', 'NumCDR3s', 'CellClass', 'Treatment', 'DistinctLoci')){
+	for (col in c('AnimalId', 'Peptide', 'Population', 'Activated', 'NumCDR3s', 'StimCategory', 'Treatment', 'DistinctLoci')){
 		plotMDS.DGEList(y_QL, labels = meta[[col]])
 	}
 }
