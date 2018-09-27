@@ -26,7 +26,7 @@ prepareDDS <- function(geneCountMatrix, meta, sizeFactorsFromEdgeR=FALSE){
 	return(dds)
 }
 
-doGenerateDeseq2Summary <- function(dds){
+doGenerateDeseq2Summary <- function(dds, DESeq2result, contrast){
 	plotSparsity(dds)
 
 	counts <- counts(dds, normalized=TRUE)
@@ -35,7 +35,7 @@ doGenerateDeseq2Summary <- function(dds){
 	plot(sizeFactors(dds),colSums(counts)/nGenes)
 
 	DESeq2result$Ensembl.Id <- DESeq2result$GeneID
-	write.table(DESeq2result,'DESeq2result.txt', sep='\t', quote=FALSE, row.names=FALSE)
+	write.table(DESeq2result,paste0('DESeq2result.', contrast, '.txt'), sep='\t', quote=FALSE, row.names=FALSE)
 
 	topGenes <- DESeq2result[DESeq2result$padj < 0.05,]
 	topGeneIds <- topGenes$GeneID
@@ -43,7 +43,7 @@ doGenerateDeseq2Summary <- function(dds){
 	if (nrow(topGenes) > 0){
 		topGenes <- addEnsembl(topGenes)
 	}
-	write.table(topGenes ,'DESeq2result_top.txt', sep='\t', quote=FALSE, row.names=FALSE)
+	write.table(topGenes ,paste0('DESeq2result_top', contrast, '.txt'), sep='\t', quote=FALSE, row.names=FALSE)
 
 	#histogram of p-values
 	hist(DESeq2result$pvalue)
