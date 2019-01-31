@@ -1,4 +1,4 @@
-runEdgeRQL <- function(geneCountMatrix, design, geneAnnotations=NULL){
+runEdgeRQL <- function(geneCountMatrix, geneAnnotations=NULL){
 	y = DGEList(geneCountMatrix,genes=geneAnnotations) 
 	keep = rowSums(cpm(y)>1)>=3 #filtering
 
