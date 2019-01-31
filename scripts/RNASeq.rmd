@@ -149,7 +149,7 @@ if (file.exists(resumeFile)){
 	saveRDS(DESeq2result, resumeFile)
 }
 
-topGenes <- doGenerateDeseq2Summary(dds)
+topGenes <- doGenerateDeseq2Summary(dds, DESeq2result, 'topGenes')
 if (!is.null(topGenes) && nrow(topGenes) > 0){
 	d3 <- data.frame(Source=c('DESeq2'), Ensembl=topGenes$Ensembl.Id, GeneName=topGenes$external_gene_name, logFC=topGenes$log2FoldChange, logCPM=topGenes$baseMean, FDR=c(NA), Comparison=c(l), dir=topGenes$dir, PValue=topGenes$pvalue, PAdj=topGenes$padj, description=topGenes$description, goAnnotations=topGenes$goAnnotations)
 	d3 <- arrange(d3,PValue)
