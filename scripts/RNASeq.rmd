@@ -73,11 +73,13 @@ if (file.exists(resumeFile)){
 	saveRDS(qlf2, resumeFile)
 }
 
-QLresultTop <- generateEdgeRSummary(y_QL, qlf2, meta, 'ql')
-if (!is.null(QLresultTop) && nrow(QLresultTop) > 0){
-	d1 <- data.frame(Source=c('edgeR_QL'), Ensembl=QLresultTop$Ensembl.Id, GeneName=QLresultTop$external_gene_name, logFC=QLresultTop$logFC, logCPM=QLresultTop$logCPM, FDR=QLresultTop$FDR,  Comparison=c(l), dir=QLresultTop$dir, PValue=QLresultTop$PValue, PAdj=c(NA), description=QLresultTop$description, goAnnotations=QLresultTop$goAnnotations)
-	d1 <- arrange(d1,PValue)
-	combinedResults <- rbind(combinedResults, d1)
+if(!(exists('skipComparisons') && skipComparisons)){
+  QLresultTop <- generateEdgeRSummary(y_QL, qlf2, meta, 'ql')
+  if (!is.null(QLresultTop) && nrow(QLresultTop) > 0){
+  	d1 <- data.frame(Source=c('edgeR_QL'), Ensembl=QLresultTop$Ensembl.Id, GeneName=QLresultTop$external_gene_name, logFC=QLresultTop$logFC, logCPM=QLresultTop$logCPM, FDR=QLresultTop$FDR,  Comparison=c(l), dir=QLresultTop$dir, PValue=QLresultTop$PValue, PAdj=c(NA), description=QLresultTop$description, goAnnotations=QLresultTop$goAnnotations)
+  	d1 <- arrange(d1,PValue)
+  	combinedResults <- rbind(combinedResults, d1)
+  }
 }
 
 ```
@@ -111,11 +113,13 @@ if (file.exists(resumeFile)){
 	saveRDS(lrt, resumeFile)
 }
 
-QLMresultTop <- generateEdgeRSummary(y_QLM, lrt, meta, 'qlm')
-if (!is.null(QLMresultTop) && nrow(QLMresultTop) > 0){
-	d1 <- data.frame(Source=c('edgeR_QLM'), Ensembl=QLMresultTop$Ensembl.Id, GeneName=QLMresultTop$external_gene_name, logFC=QLMresultTop$logFC, logCPM=QLMresultTop$logCPM, FDR=QLMresultTop$FDR, Comparison=c(l), dir=QLMresultTop$dir, PValue=QLMresultTop$PValue, PAdj=c(NA), description=QLMresultTop$description, goAnnotations=QLMresultTop$goAnnotations)
-	d1 <- arrange(d1,PValue)
-	combinedResults <- rbind(combinedResults, d1)
+if(!(exists('skipComparisons') && skipComparisons)){
+  QLMresultTop <- generateEdgeRSummary(y_QLM, lrt, meta, 'qlm')
+  if (!is.null(QLMresultTop) && nrow(QLMresultTop) > 0){
+  	d1 <- data.frame(Source=c('edgeR_QLM'), Ensembl=QLMresultTop$Ensembl.Id, GeneName=QLMresultTop$external_gene_name, logFC=QLMresultTop$logFC, logCPM=QLMresultTop$logCPM, FDR=QLMresultTop$FDR, Comparison=c(l), dir=QLMresultTop$dir, PValue=QLMresultTop$PValue, PAdj=c(NA), description=QLMresultTop$description, goAnnotations=QLMresultTop$goAnnotations)
+  	d1 <- arrange(d1,PValue)
+  	combinedResults <- rbind(combinedResults, d1)
+  }
 }
 
 ```
@@ -149,11 +153,13 @@ if (file.exists(resumeFile)){
 	saveRDS(DESeq2result, resumeFile)
 }
 
-topGenes <- doGenerateDeseq2Summary(dds)
-if (!is.null(topGenes) && nrow(topGenes) > 0){
-	d3 <- data.frame(Source=c('DESeq2'), Ensembl=topGenes$Ensembl.Id, GeneName=topGenes$external_gene_name, logFC=topGenes$log2FoldChange, logCPM=topGenes$baseMean, FDR=c(NA), Comparison=c(l), dir=topGenes$dir, PValue=topGenes$pvalue, PAdj=topGenes$padj, description=topGenes$description, goAnnotations=topGenes$goAnnotations)
-	d3 <- arrange(d3,PValue)
-	combinedResults <- rbind(combinedResults, d3)
+if(!(exists('skipComparisons') && skipComparisons)){
+  topGenes <- doGenerateDeseq2Summary(dds)
+  if (!is.null(topGenes) && nrow(topGenes) > 0){
+  	d3 <- data.frame(Source=c('DESeq2'), Ensembl=topGenes$Ensembl.Id, GeneName=topGenes$external_gene_name, logFC=topGenes$log2FoldChange, logCPM=topGenes$baseMean, FDR=c(NA), Comparison=c(l), dir=topGenes$dir, PValue=topGenes$pvalue, PAdj=topGenes$padj, description=topGenes$description, goAnnotations=topGenes$goAnnotations)
+  	d3 <- arrange(d3,PValue)
+  	combinedResults <- rbind(combinedResults, d3)
+  }
 }
 
 ```
@@ -170,28 +176,30 @@ if (file.exists(resumeFile)){
 	saveRDS(rld, resumeFile)
 }
 
-# make the lists
-greatestGenes <- head(topGenes$GeneID, n=50)
-
-#consider shifting to those w/ greatest fold change
-#genesFC <- arrange(topGenes, abs(log2FoldChange))
-#greatestGenes <- c(greatestGenes, tail(topGenes$GeneID, n=30))
-#greatestGenes  <- unique(greatestGenes)
-#print(length(greatestGenes))
-
-if (length(greatestGenes) > 0){
-	my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
-	matrix <- assay(rld)[ greatestGenes, ]
-	matrix <- matrix - rowMeans(matrix)
-	heatmap.2(matrix , labCol=meta$GroupCol, col=my_palette)
+if(!(exists('skipComparisons') && skipComparisons)){
+  # make the lists
+  greatestGenes <- head(topGenes$GeneID, n=50)
+  
+  #consider shifting to those w/ greatest fold change
+  #genesFC <- arrange(topGenes, abs(log2FoldChange))
+  #greatestGenes <- c(greatestGenes, tail(topGenes$GeneID, n=30))
+  #greatestGenes  <- unique(greatestGenes)
+  #print(length(greatestGenes))
+  
+  if (length(greatestGenes) > 0){
+  	my_palette <- colorRampPalette(c("red", "black", "green"))(n = 299)
+  	matrix <- assay(rld)[ greatestGenes, ]
+  	matrix <- matrix - rowMeans(matrix)
+  	heatmap.2(matrix , labCol=meta$GroupCol, col=my_palette)
+  }
+  
+  pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'StimCategory'), returnData=TRUE)
+  write.table(pc1, file='rld_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
+  qplot(PC1,PC2,color=GroupCol,data=pc1)
+  qplot(PC1,PC2,color=AnimalId,data=pc1)
+  qplot(PC1,PC2,color=Peptide,data=pc1)
+  qplot(PC1,PC2,color=StimCategory,data=pc1)
 }
-
-pc1<-DESeq2::plotPCA(rld,intgroup=c('GroupCol', 'AnimalId', 'Peptide', 'StimCategory'), returnData=TRUE)
-write.table(pc1, file='rld_pca.txt', quote=FALSE, sep='\t', row.names=FALSE)
-qplot(PC1,PC2,color=GroupCol,data=pc1)
-qplot(PC1,PC2,color=AnimalId,data=pc1)
-qplot(PC1,PC2,color=Peptide,data=pc1)
-qplot(PC1,PC2,color=StimCategory,data=pc1)
 
 ```
 
