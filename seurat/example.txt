@@ -1,0 +1,7 @@
+docker run \
+	--rm \
+	-d -p 8787:8787 \
+	-e PASSWORD=password \
+	-v /myLocalDir:/data
+	--name rstudio \
+	bbimber/seurat
