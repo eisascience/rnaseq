@@ -182,7 +182,7 @@ processSeurat1 <- function(seuratObj){
   }
   
   if (!hasStepRun(seuratObj, 'JackStraw')) {
-    seuratObj <- JackStraw(object = seuratObj, num.replicate = 100, do.par = T, num.cores = numCores)
+    seuratObj <- JackStraw(object = seuratObj, num.replicate = 100)
     seuratObj <- markStepRun(seuratObj, 'JackStraw', saveFile)
   }
   
