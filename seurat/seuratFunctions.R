@@ -1,4 +1,5 @@
 library(Seurat)
+library(data.table)
 
 createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = 0, min.features = minFeatures, project = project)
@@ -10,8 +11,31 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   return(seuratObj)
 }
 
+generateCellHashCalls <- function(barcodeFile) {
+  barcodeData <- fread(barcodeFile, sep = ',', header = T, row.names = 1)
+  barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
+  print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
+  
+  toDrop <- sum(colSums(barcodeData) == 0)
+  if (toDrop > 0){
+    print(paste0('cells dropped due to zero HTO counts: ', toDrop))
+    barcodeData <- barcodeData[,which(colSums(barcodeData) > 0)]
+    print(paste0('Final barcodes in HTO data: ', ncol(barcodeData)))
+  }
+
+  seuratObj <- CreateSeuratObject(barcodeData, assay = 'HTO')   
+  
+  tryCatch({
+    doHtoDemux(seuratObj)
+  }, warning = function(w){
+    print(w)
+  }, error = function(e){
+    print(e)
+  })
+}
+  
 appendCellHashing <- function(seuratObj, barcodeFile) {
-  barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
+  barcodeData <- fread(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
 
@@ -41,7 +65,13 @@ appendCellHashing <- function(seuratObj, barcodeFile) {
   
   seuratObj[['HTO']] <- CreateAssayObject(counts = barcodeData)
   
-  #doHtoDemux(seuratObj)
+  tryCatch({
+    doHtoDemux(seuratObj)
+  }, warning = function(w){
+    print(w)
+  }, error = function(e){
+    print(e)
+  })
   
   return(seuratObj)
 }
@@ -125,7 +155,7 @@ mergeSeuratObjs <- function(seuratObjs, data){
 
 processSeurat1 <- function(seuratObj){
   if (!hasStepRun(seuratObj, 'NormalizeData')) {
-    seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize", do.par = doPar, num.cores = numCores)
+    seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize")
     seuratObj <- markStepRun(seuratObj, 'NormalizeData', saveFile)
   }
   
@@ -136,7 +166,7 @@ processSeurat1 <- function(seuratObj){
   }
   
   if (!hasStepRun(seuratObj, 'ScaleData')) {
-    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"), do.par = doPar, num.cores = numCores)
+    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"))
     seuratObj <- markStepRun(seuratObj, 'ScaleData', saveFile)
   }
   
@@ -164,6 +194,24 @@ processSeurat1 <- function(seuratObj){
   return(seuratObj)
 }
 
-appendTcrClonotypes <- function(seuratData = NA, clonotypeFile = NA){
-
+# Expects all_contig_annotations.csv from cellrange vdj
+appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA){
+  tcr <- fread(clonotypeFile, header=T, sep = ',')
+  
+  # drop cellrange '-1' suffix
+  tcr <- fread(barcode = gsub("-1", "", tcr$barcode), cdr3 = tcr$cdr3)
+  
+  tcr <- tcr %>% group_by(barcode) %>% summarize(CDR3s = paste(as.character(cdr3), collapse = ','))
+  tcr <- tcr[tcr$CDR3s != 'None',]
+  origRows <- nrow(tcr)
+  tcr <- tcr[tcr$barcode %in% rownames(seuratObject),]
+  
+  pct <- nrow(tcr) / origRows * 100
+  
+  print(paste0('Barcodes with clonotypes: ', origRows, ', intersecting with GEX data: ', nrow(tcr), " (", pct, "%)"))
+  
+  merged <- merge(data.frame(barcode = rownames(pbmc@meta.data)), tcr, by = c('barcode'), all.x = T)
+  rownames(merged) <- merged$barcode
+  
+  seuratObject[["CDR3s"]] <- merged$CDR3s
 }
