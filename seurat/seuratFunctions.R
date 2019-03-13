@@ -4,6 +4,8 @@ library(data.table)
 library(dplyr)
 library(naturalsort)
 
+labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
+
 createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = 0, min.features = minFeatures, project = project)
 
@@ -144,7 +146,6 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
   #Download named clonotypes and merge:
   # Add clone names:
   labelDf <- labkey.selectRows(
-    baseUrl="https://prime-seq.ohsu.edu", 
     folderPath="/Labs/Bimber/", 
     schemaName="tcrdb", 
     queryName="clones", 
