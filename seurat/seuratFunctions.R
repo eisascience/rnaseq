@@ -1,5 +1,8 @@
 library(Seurat)
+library(Rlabkey)
 library(data.table)
+library(dplyr)
+library(naturalsort)
 
 createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = 0, min.features = minFeatures, project = project)
@@ -7,93 +10,6 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   mito.features <- grep(pattern = "^MT-", x = rownames(x = seuratObj), value = TRUE)
   percent.mito <- Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts')[mito.features, ]) / Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts'))
   seuratObj[['percent.mito']] <- percent.mito
-  
-  return(seuratObj)
-}
-
-generateCellHashCalls <- function(barcodeFile) {
-  barcodeData <- fread(barcodeFile, sep = ',', header = T, row.names = 1)
-  barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
-  print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
-  
-  toDrop <- sum(colSums(barcodeData) == 0)
-  if (toDrop > 0){
-    print(paste0('cells dropped due to zero HTO counts: ', toDrop))
-    barcodeData <- barcodeData[,which(colSums(barcodeData) > 0)]
-    print(paste0('Final barcodes in HTO data: ', ncol(barcodeData)))
-  }
-
-  seuratObj <- CreateSeuratObject(barcodeData, assay = 'HTO')   
-  
-  tryCatch({
-    doHtoDemux(seuratObj)
-  }, warning = function(w){
-    print(w)
-  }, error = function(e){
-    print(e)
-  })
-}
-  
-appendCellHashing <- function(seuratObj, barcodeFile) {
-  barcodeData <- fread(barcodeFile, sep = ',', header = T, row.names = 1)
-  barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
-  print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
-
-  toDrop <- sum(colSums(barcodeData) == 0)
-  if (toDrop > 0){
-    print(paste0('cells dropped due to zero HTO counts: ', toDrop))
-    barcodeData <- barcodeData[,which(colSums(barcodeData) > 0)]
-    print(paste0('Final barcodes in HTO data: ', ncol(barcodeData)))
-  }
-  
-  print(paste0('Initial barcodes in GEX data: ', ncol(seuratObj)))
-  
-  joint_bcs <- intersect(colnames(barcodeData),colnames(seuratObj))
-  print(paste0('Total barcodes shared between HTO and GEX data: ', length(joint_bcs)))
-  
-  seuratObj <- subset(x = seuratObj, cells = joint_bcs)
-  barcodeData <- as.matrix(barcodeData[,joint_bcs])
-  
-  print(paste0('Initials HTOs: ', length(rownames(barcodeData))))
-  toDrop <- sum(rowSums(barcodeData) == 0)        
-  if (toDrop > 0){
-    print(paste0('HTOs dropped due to zero counts: ', toDrop))
-    print(names(which(rowSums(barcodeData) > 0)))
-    barcodeData <- barcodeData[which(rowSums(barcodeData) > 0),]
-    print(paste0('Final HTOs: ', nrow(barcodeData)))
-  }
-  
-  seuratObj[['HTO']] <- CreateAssayObject(counts = barcodeData)
-  
-  tryCatch({
-    doHtoDemux(seuratObj)
-  }, warning = function(w){
-    print(w)
-  }, error = function(e){
-    print(e)
-  })
-  
-  return(seuratObj)
-}
-
-doHtoDemux <- function(seuratObj) {
-  # Normalize HTO data, here we use centered log-ratio (CLR) transformation
-  seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", display.progress = FALSE)
-  seuratObj <- HTODemux(seuratObj, assay = "HTO", positive.quantile =  0.99)
-  
-  #report outcome
-  print(table(seuratObj$HTO_classification.global))
-  print(table(seuratObj$hash.ID))
-  
-  # Group cells based on the max HTO signal
-  seuratObj_hashtag <- seuratObj
-  Idents(seuratObj_hashtag) <- "hash.ID"
-  htos <- rownames(GetAssayData(seuratObj_hashtag,assay = "HTO"))
-  for (hto in htos){
-    print(RidgePlot(seuratObj_hashtag, features = c(hto), assay = 'HTO', ncol = 1))
-  }
-  
-  print(HTOHeatmap(seuratObj, assay = "HTO", classification = "HTO_classification", global.classification = "HTO_classification.global", ncells = min(3000, ncol(seuratObj)), singlet.names = NULL))
   
   return(seuratObj)
 }
@@ -194,15 +110,10 @@ processSeurat1 <- function(seuratObj){
   return(seuratObj)
 }
 
-# Expects all_contig_annotations.csv from cellrange vdj
+
 appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA){
-  tcr <- fread(clonotypeFile, header=T, sep = ',')
+  tcr <- processAndAggregateTcrClonotypes(clonotypeFile)
   
-  # drop cellrange '-1' suffix
-  tcr <- fread(barcode = gsub("-1", "", tcr$barcode), cdr3 = tcr$cdr3)
-  
-  tcr <- tcr %>% group_by(barcode) %>% summarize(CDR3s = paste(as.character(cdr3), collapse = ','))
-  tcr <- tcr[tcr$CDR3s != 'None',]
   origRows <- nrow(tcr)
   tcr <- tcr[tcr$barcode %in% rownames(seuratObject),]
   
@@ -210,8 +121,79 @@ appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA){
   
   print(paste0('Barcodes with clonotypes: ', origRows, ', intersecting with GEX data: ', nrow(tcr), " (", pct, "%)"))
   
-  merged <- merge(data.frame(barcode = rownames(pbmc@meta.data)), tcr, by = c('barcode'), all.x = T)
+  merged <- merge(data.frame(barcode = colnames(seuratObj)), tcr, by = c('barcode'), all.x = T)
   rownames(merged) <- merged$barcode
   
-  seuratObject[["CDR3s"]] <- merged$CDR3s
+  for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
+    toAdd <- merged[[colName]]
+    names(toAdd) <- merged[[barcode]]
+    seuratObject[[colName]] <- toAdd
+  }
+  
+  return(seuratObject)
+}
+
+# Expects all_contig_annotations.csv from cellranger vdj    
+processAndAggregateTcrClonotypes <- function(clonotypeFile){  
+  tcr <- read.table(clonotypeFile, header=T, sep = ',')
+  tcr <- tcr[tcr$cdr3 != 'None',]
+  
+  # drop cellrange '-1' suffix
+  tcr$barcode <- gsub("-1", "", tcr$barcode)
+  
+  #Download named clonotypes and merge:
+  # Add clone names:
+  labelDf <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath="/Labs/Bimber/", 
+    schemaName="tcrdb", 
+    queryName="clones", 
+    showHidden=TRUE,
+    colSelect=c('clonename','chain','cdr3','animals'),
+    containerFilter=NULL,
+    colNameOpt='rname'
+  )
+  
+  labelDf$LabelCol <- paste0(labelDf$clonename)
+  
+  labelDf <- labelDf %>% 
+    group_by(chain, cdr3) %>% 
+    summarize(CloneName = paste(sort(unique(LabelCol)), collapse = ","))
+  
+  tcr <- merge(tcr, labelDf, by.x = c('chain', 'cdr3'), by.y = c('chain', 'cdr3'), all.x = TRUE, all.y = FALSE)
+  
+  # Many TRDV genes can be used as either alpha or delta TCRs.  10x classifies and TRDV/TRAJ/TRAC clones as 'Multi'.  Re-classify these:
+  tcr$chain[tcr$chain == 'Multi' & grepl(pattern = 'TRD', x = tcr$v_gene) & grepl(pattern = 'TRAJ', x = tcr$j_gene) & grepl(pattern = 'TRAC', x = tcr$c_gene)] <- c('TRA')
+  
+  # Add chain-specific columns:
+  tcr$ChainCDR3s <- paste0(tcr$chain, ':', tcr$cdr3)
+  for (l in c('TRA', 'TRB', 'TRD', 'TRG')){
+    tcr[[l]] <- c(NA)
+    tcr[[l]][tcr$chain == l] <- tcr$cdr3[tcr$chain == l]
+  }
+
+  # Summarize, grouping by barcode
+  tcr <- tcr %>% group_by(barcode) %>% summarize(
+    ChainCDR3s = paste(sort(unique(ChainCDR3s)), collapse = ","),
+    CDR3s = paste(sort(unique(cdr3)), collapse = ","),
+    TRA = paste(sort(unique(as.character(TRA))), collapse = ","),
+    TRB = paste(sort(unique(as.character(TRB))), collapse = ","),
+    TRD = paste(sort(unique(as.character(TRD))), collapse = ","),
+    TRG = paste(sort(unique(as.character(TRG))), collapse = ","),
+    CloneNames = paste(sort(unique(CloneName)), collapse = ",")  #this is imprecise b/c we count a hit if we match any chain, but this is probably what we often want
+  )
+  
+  tcr$CloneNames <- sapply(strsplit(as.character(tcr$CloneNames), ",", fixed = TRUE), function(x) paste(naturalsort(unique(x)), collapse = ","))
+  tcr$CloneNames[tcr$CloneNames == 'NA'] <- NA
+  
+  tcr$barcode <- as.factor(tcr$barcode)
+  for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
+    v <- tcr[[colName]]
+    v <- as.character(v)
+    v[v == ''] <- NA
+    
+    tcr[[colName]] <- as.factor(v)
+  }
+  
+  return(tcr)
 }
