@@ -30,8 +30,7 @@ printQcPlots1 <- function(seuratObj) {
     sum(nUMI >= x)
   }))
   
-  #TODO: labeling?
-  plot(log(countAbove), log(nUMI), pch=20)  
+  plot(log(countAbove), log(nUMI), pch=20, ylab = "UMI/Cell", xlab = "# Cells")  
 }
 
 hasStepRun <- function(seuratObj, name) {
