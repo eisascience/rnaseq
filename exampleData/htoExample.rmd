@@ -1,0 +1,54 @@
+```{r}
+
+source('../seurat/cellHashingFunctions.R')
+
+#Relatively good input.  Several outlier cells with extremely high counts
+#barcodeFile <- '247-1-hashTagCounts.txt'
+
+#Extremely high doublets
+barcodeFile <- '267-1-citeSeqCounts.txt'
+
+#barcodeFile <- '267-2-citeSeqCounts.txt'
+
+```
+
+# Basic QC and Filtering on input:
+
+```{r}
+
+barcodeData <- processCiteSeqCount(barcodeFile, minColSum = 2)
+
+generateQcPlots(barcodeData)
+
+
+```
+
+
+# Using Seurat:
+
+```{r}
+
+
+sc <- generateCellHashCallsSeurat(barcodeData)
+
+
+```
+
+# Using MULTI-seq Classifier:
+
+```{r}
+
+
+mc <- generateCellHashCallsMultiSeq(barcodeData)
+
+
+```
+
+
+
+```{r}
+
+dt <- processEnsemblHtoCalls(mc, sc)
+
+
+```
