@@ -141,29 +141,24 @@ generateCellHashCallsSeurat <- function(barcodeData) {
     print(w)
   }, error = function(e){
     print(e)
+    return(NA)  #TODO: handle this better.
   })
   
   return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$hash.ID, HTO_classification.all = seuratObj$HTO_classification, HTO_classification.global = seuratObj$HTO_classification.global, key = c('Barcode')))
 }
 
-appendCellHashing <- function(seuratObj, barcodeCalls) {
-  print(paste0('Initial called barcode in HTO data: ', nrow(barcodeCalls)))
+appendCellHashing <- function(seuratObj, barcodeCallTable) {
+  print(paste0('Initial called barcodes in HTO data: ', nrow(barcodeCallTable)))
   print(paste0('Initial barcodes in GEX data: ', ncol(seuratObj)))
   
-  joint_bcs <- intersect(barcodeCalls$barcode,colnames(seuratObj))
+  joint_bcs <- intersect(barcodeCallTable$CellBarcode,colnames(seuratObj))
   print(paste0('Total barcodes shared between HTO and GEX data: ', length(joint_bcs)))
   
   seuratObj <- subset(x = seuratObj, cells = joint_bcs)
-  barcodeCalls <- as.matrix(barcodeCalls[,joint_bcs])
+  barcodeCallTable <- barcodeCallTable[colnames(seuratObj),]
   
-  print(paste0('Initials HTOs: ', length(rownames(barcodeData))))
-  toDrop <- sum(rowSums(barcodeData) == 0)        
-  if (toDrop > 0){
-    print(paste0('HTOs dropped due to zero counts: ', toDrop))
-    print(names(which(rowSums(barcodeData) > 0)))
-    barcodeData <- barcodeData[which(rowSums(barcodeData) > 0),]
-    print(paste0('Final HTOs: ', nrow(barcodeData)))
-  }
+  seuratObj[['HTO']] <- barcodeCallTable$HTO
+  seuratObj[['HTO_Classification']] <- barcodeCallTable$HTO_Classification
   
   return(seuratObj)
 }
@@ -360,7 +355,17 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt') {
           ggtitle('Discordance By HTO Call, Ignoring Negatives') + ylab('Seurat') + xlab('MULTI-seq')
   )
   ret <-merged[merged$ConcordantNoNeg,]
-  write.table(ret, file = outFile)
   
-  return(ret)
+  # These calls should be identical, except for possibly negatives from one method that are non-negative in the other
+  # For the time being, accept those as correct.
+  ret$FinalCall <- ret$HTO_classification.MultiSeq
+  ret$FinalCall[ret$HTO_classification.MultiSeq == 'Negative'] <- ret$HTO_classification.Seurat[ret$HTO_classification.MultiSeq == 'Negative']
+  
+  ret$FinalClassification <- ret$HTO_classification.global.MultiSeq
+  ret$FinalClassification[ret$HTO_classification.global.MultiSeq == 'Negative'] <- ret$HTO_classification.global.Seurat[ret$HTO_classification.global.MultiSeq == 'Negative']
+  
+  write.table(ret, file = outFile, row.names = F, sep = '\t', quote = F)
+  
+  
+  return(data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode'))
 }

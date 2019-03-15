@@ -2,13 +2,14 @@
 
 source('../seurat/cellHashingFunctions.R')
 
-#Relatively good input.  Several outlier cells with extremely high counts
+#Relatively good input.  Several outlier cells with extremely high counts.
 #barcodeFile <- '247-1-hashTagCounts.txt'
 
 #Extremely high doublets
-barcodeFile <- '267-1-citeSeqCounts.txt'
+#barcodeFile <- '267-1-citeSeqCounts.txt'
 
-#barcodeFile <- '267-2-citeSeqCounts.txt'
+barcodeFile <- '267-2-citeSeqCounts.txt'
+finalCallFile <- 'finalCalls.txt'
 
 ```
 
@@ -48,7 +49,7 @@ mc <- generateCellHashCallsMultiSeq(barcodeData)
 
 ```{r}
 
-dt <- processEnsemblHtoCalls(mc, sc)
+dt <- processEnsemblHtoCalls(mc, sc, outFile = finalCallFile)
 
 
 ```
