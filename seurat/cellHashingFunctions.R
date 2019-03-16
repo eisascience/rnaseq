@@ -318,7 +318,7 @@ reclassifyByMultiSeq <- function(bar.table.full, final.calls){
   final.calls.rescued[rownames(reclass.cells)[rescue.ind]] <- reclass.cells$Reclassification[rescue.ind]
 }
 
-processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt') {
+processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
   mc$Barcode <- as.character(mc$Barcode)
   sc$Barcode <- as.character(sc$Barcode)
   merged <- merge(mc, sc, all = T, by = 'Barcode', suffixes = c('.MultiSeq', '.Seurat'))
@@ -370,6 +370,9 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt') {
   
   write.table(ret, file = outFile, row.names = F, sep = '\t', quote = F)
   
+  if (!is.na(allCallsOutFile)) {
+    write.table(merged, file = allCallsOutFile, row.names = F, sep = '\t', quote = F)
+  }
   
   return(data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode'))
 }
