@@ -10,7 +10,7 @@ library(KernSmooth)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
-processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 5) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 10) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
@@ -59,14 +59,19 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
   print('Removing Outliers:')  
   toDrop <- c()
   for(name in names(out)){
-    print(paste0(name, ' Outliers: ', length(out[[name]])))
-    print(paste0('Non-zero: ', sum(barcodeMatrix[name,] > 0)))
-    toDrop <- c(toDrop, names(out[[name]]))
+    #limit to high-read outliers:
+    rMean <- mean(barcodeMatrix[name,])
+    vals <- out[[name]]
+    vals <- vals[vals > rMean]
+    
+    print(paste0(name, ' Outliers: ', length(vals)))
+    print(paste0('Non-zero values: ', sum(barcodeMatrix[name,] > 0)))
+    toDrop <- c(toDrop, names(vals))
   }
   
   toDrop <- unique(toDrop)
   if (length(toDrop) > 0) {
-    print(paste0('Dropping outliers: ', length(toDrop)))
+    print(paste0('Dropping outliers, total: ', length(toDrop)))
     barcodeData <- barcodeData[!(names(barcodeData) %in% toDrop)]
   }
   
