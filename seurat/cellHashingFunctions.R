@@ -8,8 +8,7 @@ library(ggplot2)
 library(knitr)
 library(KernSmooth)
 
-#TODO: when/if our PR is accepted, switch to primary repo
-source('https://raw.githubusercontent.com/bbimber/MULTI-seq/Return/R/MULTIseq.Classification.Suite.R')
+source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
 processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 5) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
