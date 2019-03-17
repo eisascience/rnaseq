@@ -10,7 +10,7 @@ library(KernSmooth)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
-processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 10) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 25) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
@@ -139,16 +139,23 @@ generateQcPlots <- function(barcodeData){
 generateCellHashCallsSeurat <- function(barcodeData) {
   seuratObj <- CreateSeuratObject(barcodeData, assay = 'HTO')   
   
-  tryCatch({
+  hadError <- tryCatch({
     seuratObj <- doHtoDemux(seuratObj)
+    return(F)
   }, warning = function(w){
     print(w)
+    return(F)
   }, error = function(e){
     print(e)
-    return(NA)  #TODO: handle this better.
+    return(T)
   })
   
-  return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$hash.ID, HTO_classification.all = seuratObj$HTO_classification, HTO_classification.global = seuratObj$HTO_classification.global, key = c('Barcode')))
+  if (hadError) {
+    print('Error generating seurat calls, aborting')
+    return(NA)
+  }
+
+    return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$hash.ID, HTO_classification.all = seuratObj$HTO_classification, HTO_classification.global = seuratObj$HTO_classification.global, key = c('Barcode')))
 }
 
 appendCellHashing <- function(seuratObj, barcodeCallTable) {
@@ -289,11 +296,6 @@ performRoundOfMultiSeqCalling <- function(bar.table, roundNum) {
     return(NA)
   }
   
-  if (roundNum > 1 && length(threshold1$extrema) > 5){
-    print("Too many local maxima found, aborting")
-    return(NA)
-  }
-  
   ## Finalize round 1 classifications, remove negative cells
   extrema <- threshold1$extrema[length(threshold1$extrema)]  #assume we use max value
   print(paste0('Round ', roundNum ,' Threshold: ', extrema))
@@ -333,6 +335,11 @@ reclassifyByMultiSeq <- function(bar.table.full, final.calls){
 }
 
 processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
+  if (all(is.na(sc)) && all(is.na(mc))){
+    print('MULTI-seq and Seurat failed to produce calls, aborting')
+    return()
+  }
+  
   if (all(is.na(sc))){
     print('No calls for seurat found')  
     dt <- data.table(CellBarcode = mc$Barcode, HTO = mc$HTO_classification, HTO_Classification = mc$HTO_classification.global, key = 'CellBarcode')
