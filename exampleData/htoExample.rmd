@@ -9,6 +9,9 @@ barcodeFile <- '247-1-hashTagCounts.txt'
 #barcodeFile <- '267-1-citeSeqCounts.txt'
 
 #barcodeFile <- '267-2-citeSeqCounts.txt'
+
+barcodeFile <- '253-2-citeSeqCounts.txt'
+
 finalCallFile <- 'finalCalls.txt'
 
 ```

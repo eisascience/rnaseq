@@ -193,14 +193,14 @@ generateCellHashCallsMultiSeq <- function(barcodeData) {
   #transpose CITE-seq count input:
   bar.table.full <- data.frame(t(barcodeData))
   
-  bar.tsne <- barTSNE(bar.table.full) 
-  
+  bar.tsne <- barTSNE(bar.table.full)
+
   for (i in 3:ncol(bar.tsne)) {
     g <- ggplot(bar.tsne, aes(x = TSNE1, y = TSNE2, color = bar.tsne[,i])) +
       geom_point() +
       scale_color_gradient(low = "black", high = "red") +
       ggtitle(colnames(bar.tsne)[i]) +
-      theme(legend.position = "none") 
+      theme(legend.position = "none")
     print(g)
   }
   
@@ -228,6 +228,11 @@ generateCellHashCallsMultiSeq <- function(barcodeData) {
     }
   }
   
+  if (all(is.na(final.calls))) {
+    print('No calls, aborting')
+    return(NA)
+  }
+  
   neg.cells <- unique(neg.cells)
   final.names <- c(names(final.calls),neg.cells)
   
@@ -241,6 +246,10 @@ generateCellHashCallsMultiSeq <- function(barcodeData) {
   global <- as.character(final.calls)
   global[!(global %in% c('Doublet', 'Negative'))] <- 'Singlet'
   global <- as.factor(global)
+  
+  if (length(final.calls) == 0){
+    return(NA)
+  }
   
   return(data.table(
     Barcode = as.factor(names(final.calls)), 
@@ -277,6 +286,11 @@ performRoundOfMultiSeqCalling <- function(bar.table, roundNum) {
   
   if (length(threshold1$extrema) == 0){
     print("Unable to find extrema, aborting")
+    return(NA)
+  }
+  
+  if (roundNum > 1 && length(threshold1$extrema) > 5){
+    print("Too many local maxima found, aborting")
     return(NA)
   }
   
@@ -319,6 +333,22 @@ reclassifyByMultiSeq <- function(bar.table.full, final.calls){
 }
 
 processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
+  if (all(is.na(sc))){
+    print('No calls for seurat found')  
+    dt <- data.table(CellBarcode = mc$Barcode, HTO = mc$HTO_classification, HTO_Classification = mc$HTO_classification.global, key = 'CellBarcode')
+    write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
+    
+    return(dt)
+  }
+  
+  if (all(is.na(mc))){
+    print('No calls for MULTI-seq found')  
+    dt <- data.table(CellBarcode = sc$Barcode, HTO = sc$HTO_classification, HTO_Classification = sc$HTO_classification.global, key = 'CellBarcode')
+    write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
+    
+    return(dt)
+  }
+  
   mc$Barcode <- as.character(mc$Barcode)
   sc$Barcode <- as.character(sc$Barcode)
   merged <- merge(mc, sc, all = T, by = 'Barcode', suffixes = c('.MultiSeq', '.Seurat'))
@@ -367,12 +397,20 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', all
   
   ret$FinalClassification <- ret$HTO_classification.global.MultiSeq
   ret$FinalClassification[ret$HTO_classification.global.MultiSeq == 'Negative'] <- ret$HTO_classification.global.Seurat[ret$HTO_classification.global.MultiSeq == 'Negative']
-  
-  write.table(ret, file = outFile, row.names = F, sep = '\t', quote = F)
-  
-  if (!is.na(allCallsOutFile)) {
+
+  if (!is.na(allCallsOutFile) && nrow(merged) > 0) {
     write.table(merged, file = allCallsOutFile, row.names = F, sep = '\t', quote = F)
   }
   
-  return(data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode'))
+  if (nrow(ret) > 0){
+    dt <- data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode')
+    write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
+    
+    return(dt)
+    
+  } else {
+    print('No rows, not saving ')
+  }
+  
+  
 }
