@@ -10,7 +10,7 @@ library(KernSmooth)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
-processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 75) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 40, minCellsAboveThreshold = 25) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
@@ -32,7 +32,11 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
     print(paste0('Final HTOs: ', nrow(barcodeData)))
   }
   
-  rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max))
+  rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+    sum(x > 0)
+  }))
+  
+  print('Total cells above row min threshold:')
   print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
   
   #rowMax
@@ -44,10 +48,28 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
     print(paste0('Final HTOs: ', nrow(barcodeData)))
   }
   
-  #Find outliers with high counts per HTO:
-  #TODO: what is actually the best method here?
   barcodeMatrix <- as.matrix(barcodeData)
   
+  #Also look for total # above this limit:
+  countPerRow <- colSums(apply(barcodeMatrix, 1, function(x){
+    as.integer(x > minRowMax)
+  }))
+  
+  print('Total Cells per HTO above theshold:')
+  print(kable(countPerRow))
+  
+  toDrop <- countPerRow < minCellsAboveThreshold
+  if (sum(toDrop) > 0){
+    print(paste0('HTOs dropped due to insufficient cells above max theshold: ', sum(toDrop)))
+    print(paste(rownames(barcodeData)[toDrop], collapse = ', '))
+    barcodeData <- barcodeData[!toDrop,]
+    print(paste0('Final HTOs: ', nrow(barcodeData)))
+  }
+  
+  barcodeMatrix <- as.matrix(barcodeData)
+  
+  #Find outliers with high counts per HTO:
+  #TODO: what is actually the best method here?
   #q <- apply(barcodeMatrix, 1, function(x){
   #  quantile(x, probs = c(0.99),  na.rm = TRUE)
   #}) 
@@ -76,7 +98,9 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
   # }
   
   #repeat summary:
-  rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max))
+  rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+    sum(x > 0)
+  }))
   print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
   
   return(barcodeData)  
