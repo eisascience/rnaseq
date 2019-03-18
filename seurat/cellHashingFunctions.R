@@ -139,23 +139,15 @@ generateQcPlots <- function(barcodeData){
 generateCellHashCallsSeurat <- function(barcodeData) {
   seuratObj <- CreateSeuratObject(barcodeData, assay = 'HTO')   
   
-  hadError <- tryCatch({
+  tryCatch({
     seuratObj <- doHtoDemux(seuratObj)
-    return(F)
-  }, warning = function(w){
-    print(w)
-    return(F)
+    
+    return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$hash.ID, HTO_classification.all = seuratObj$HTO_classification, HTO_classification.global = seuratObj$HTO_classification.global, key = c('Barcode')))
   }, error = function(e){
     print(e)
-    return(T)
-  })
-  
-  if (hadError) {
     print('Error generating seurat calls, aborting')
     return(NA)
-  }
-
-    return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$hash.ID, HTO_classification.all = seuratObj$HTO_classification, HTO_classification.global = seuratObj$HTO_classification.global, key = c('Barcode')))
+  })
 }
 
 appendCellHashing <- function(seuratObj, barcodeCallTable) {
@@ -207,7 +199,7 @@ generateCellHashCallsMultiSeq <- function(barcodeData) {
       geom_point() +
       scale_color_gradient(low = "black", high = "red") +
       ggtitle(colnames(bar.tsne)[i]) +
-      theme(legend.position = "none")
+      theme(legend.position = "right")
     print(g)
   }
   
