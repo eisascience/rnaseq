@@ -10,7 +10,7 @@ library(KernSmooth)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
-processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 25) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 75) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
@@ -56,24 +56,24 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
     boxplot.stats(x[x > 0], coef = 20)$out
   })
 
-  print('Removing Outliers:')  
-  toDrop <- c()
-  for(name in names(out)){
-    #limit to high-read outliers:
-    rMean <- mean(barcodeMatrix[name,])
-    vals <- out[[name]]
-    vals <- vals[vals > rMean]
-    
-    print(paste0(name, ' Outliers: ', length(vals)))
-    print(paste0('Non-zero values: ', sum(barcodeMatrix[name,] > 0)))
-    toDrop <- c(toDrop, names(vals))
-  }
-  
-  toDrop <- unique(toDrop)
-  if (length(toDrop) > 0) {
-    print(paste0('Dropping outliers, total: ', length(toDrop)))
-    barcodeData <- barcodeData[!(names(barcodeData) %in% toDrop)]
-  }
+  # print('Removing Outliers:')  
+  # toDrop <- c()
+  # for(name in names(out)){
+  #   #limit to high-read outliers:
+  #   rMean <- mean(barcodeMatrix[name,])
+  #   vals <- out[[name]]
+  #   vals <- vals[vals > rMean]
+  #   
+  #   print(paste0(name, ' Outliers: ', length(vals)))
+  #   print(paste0('Non-zero values: ', sum(barcodeMatrix[name,] > 0)))
+  #   toDrop <- c(toDrop, names(vals))
+  # }
+  # 
+  # toDrop <- unique(toDrop)
+  # if (length(toDrop) > 0) {
+  #   print(paste0('Dropping outliers, total: ', length(toDrop)))
+  #   barcodeData <- barcodeData[!(names(barcodeData) %in% toDrop)]
+  # }
   
   #repeat summary:
   rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max))
@@ -188,19 +188,21 @@ doHtoDemux <- function(seuratObj) {
   return(seuratObj)
 }
 
-generateCellHashCallsMultiSeq <- function(barcodeData) {
+generateCellHashCallsMultiSeq <- function(barcodeData, showTSNE = T) {
   #transpose CITE-seq count input:
   bar.table.full <- data.frame(t(barcodeData))
   
-  bar.tsne <- barTSNE(bar.table.full)
-
-  for (i in 3:ncol(bar.tsne)) {
-    g <- ggplot(bar.tsne, aes(x = TSNE1, y = TSNE2, color = bar.tsne[,i])) +
-      geom_point() +
-      scale_color_gradient(low = "black", high = "red") +
-      ggtitle(colnames(bar.tsne)[i]) +
-      theme(legend.position = "right")
-    print(g)
+  if (showTSNE) {
+    bar.tsne <- barTSNE(bar.table.full)
+  
+    for (i in 3:ncol(bar.tsne)) {
+      g <- ggplot(bar.tsne, aes(x = TSNE1, y = TSNE2, color = bar.tsne[,i])) +
+        geom_point() +
+        scale_color_gradient(low = "black", high = "red") +
+        ggtitle(colnames(bar.tsne)[i]) +
+        theme(legend.position = "right")
+      print(g)
+    }
   }
   
   final.calls <- NA
@@ -326,7 +328,7 @@ reclassifyByMultiSeq <- function(bar.table.full, final.calls){
   final.calls.rescued[rownames(reclass.cells)[rescue.ind]] <- reclass.cells$Reclassification[rescue.ind]
 }
 
-processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
+processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
   if (all(is.na(sc)) && all(is.na(mc))){
     print('MULTI-seq and Seurat failed to produce calls, aborting')
     return()
@@ -335,6 +337,7 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', all
   if (all(is.na(sc))){
     print('No calls for seurat found')  
     dt <- data.table(CellBarcode = mc$Barcode, HTO = mc$HTO_classification, HTO_Classification = mc$HTO_classification.global, key = 'CellBarcode')
+    dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
     return(dt)
@@ -343,6 +346,7 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', all
   if (all(is.na(mc))){
     print('No calls for MULTI-seq found')  
     dt <- data.table(CellBarcode = sc$Barcode, HTO = sc$HTO_classification, HTO_Classification = sc$HTO_classification.global, key = 'CellBarcode')
+    dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
     return(dt)
@@ -403,6 +407,7 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', all
   
   if (nrow(ret) > 0){
     dt <- data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode')
+    dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
     return(dt)
@@ -410,6 +415,33 @@ processEnsemblHtoCalls <- function(mc, sc, outFile = 'combinedHtoCalls.txt', all
   } else {
     print('No rows, not saving ')
   }
+}
+
+printFinalSummary <- function(dt, barcodeData){
+  #Append raw counts:
+  bc <- t(barcodeData)
+  x <- melt(bc)
+  names(x) <- c('CellBarcode', 'HTO', 'Count')
   
+  merged <- merge(dt, x, by = c('CellBarcode', 'HTO'), all.x = T, all.y = F)
   
+  bc <- as.data.frame(bc)
+  bc$CellBarcode <- rownames(bc)
+  merged <- merge(merged, bc, by = c('CellBarcode'), all.x = T, all.y = F)
+ 
+  print(ggplot(merged, aes(x = HTO)) +
+          geom_histogram(stat = 'count') +
+          xlab('HTO') +
+          ylab('Count') +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
+  
+  print(ggplot(merged, aes(x = HTO_Classification)) +
+          geom_histogram(stat = 'count') +
+          xlab('Classification') +
+          ylab('Count') +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
+
+  return(merged)
 }
