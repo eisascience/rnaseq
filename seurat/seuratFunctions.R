@@ -98,6 +98,11 @@ processSeurat1 <- function(seuratObj){
     seuratObj <- markStepRun(seuratObj, 'ProjectDim', saveFile)
   }
   
+  if (!hasStepRun(seuratObj, 'FindNeighbors')) {
+      seuratObj <- FindNeighbors(object = seuratObj)
+      seuratObj <- markStepRun(seuratObj, 'FindNeighbors', saveFile)
+   }
+  
   if (!hasStepRun(seuratObj, 'JackStraw')) {
     seuratObj <- JackStraw(object = seuratObj, num.replicate = 100)
     seuratObj <- markStepRun(seuratObj, 'JackStraw', saveFile)
