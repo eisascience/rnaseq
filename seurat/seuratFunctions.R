@@ -17,9 +17,9 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
 }
 
 printQcPlots1 <- function(seuratObj) {
-  print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3))
+  print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "p.mito"), ncol = 3))
   
-  print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "percent.mito"))
+  print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "p.mito"))
   print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"))
   
   #10x-like plot
