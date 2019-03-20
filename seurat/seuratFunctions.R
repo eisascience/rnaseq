@@ -10,16 +10,16 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = 0, min.features = minFeatures, project = project)
 
   mito.features <- grep(pattern = "^MT-", x = rownames(x = seuratObj), value = TRUE)
-  percent.mito <- Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts')[mito.features, ]) / Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts'))
-  seuratObj[['percent.mito']] <- percent.mito
+  p.mito <- Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts')[mito.features, ]) / Matrix::colSums(x = GetAssayData(object = seuratObj, slot = 'counts'))
+  seuratObj[['p.mito']] <- p.mito
   
   return(seuratObj)
 }
 
 printQcPlots1 <- function(seuratObj) {
-  print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3))
+  print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "p.mito"), ncol = 3))
   
-  print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "percent.mito"))
+  print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "p.mito"))
   print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"))
   
   #10x-like plot
