@@ -3,7 +3,6 @@ library(Rlabkey)
 library(data.table)
 library(dplyr)
 library(naturalsort)
-library(DropletUtils)
 
 labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
 
@@ -32,36 +31,6 @@ printQcPlots1 <- function(seuratObj) {
   }))
   
   plot(log(countAbove), log(nUMI), pch=20, ylab = "UMI/Cell", xlab = "# Cells")  
-}
-
-
-performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01) {
-  br.out <- barcodeRanks(seuratRawData)
-  
-  # Making a plot.
-  plot(br.out$rank, br.out$total, log="xy", xlab="Rank", ylab="Total")
-  o <- order(br.out$rank)
-  lines(br.out$rank[o], br.out$fitted[o], col="red")
-  abline(h=br.out$knee, col="dodgerblue", lty=2)
-  abline(h=br.out$inflection, col="forestgreen", lty=2)
-  legend("bottomleft", lty=2, col=c("dodgerblue", "forestgreen"), 
-         legend=c("knee", "inflection"))
-  
-  e.out <- emptyDrops(seuratRawData)
-  e.out$is.cell <- e.out$FDR <= fdrThreshold
-  print(paste0('Passing cells: ', sum(e.out$is.cell, na.rm=TRUE)))
-  print(paste0('Failing cells: ', sum(!e.out$is.cell, na.rm=TRUE)))
-  print(table(Limited=e.out$Limited, Significant=e.out$is.cell))
-        
-  toPlot <- e.out[e.out$LogProb != -Inf,]
-  if (nrow(toPlot) > 0) {
-    print(plot(toPlot$Total, -toPlot$LogProb, col=ifelse(toPlot$is.cell, "red", "black"), xlab="Total UMI count", ylab="-Log Probability"))
-  } else {
-    print('Probabilities all -Inf, unable to plot')  
-  }
-  
-  passingCells <- rownames(e.out)[e.out$is.cell]
-  return(seuratRawData[,passingCells])
 }
 
 hasStepRun <- function(seuratObj, name) {
@@ -101,11 +70,12 @@ mergeSeuratObjs <- function(seuratObjs, data){
   return(seuratObj)  
 }
 
-processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T){
+processSeurat1 <- function(seuratObj){
   if (!hasStepRun(seuratObj, 'NormalizeData')) {
     seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize")
     seuratObj <- markStepRun(seuratObj, 'NormalizeData', saveFile)
   }
+  
   
   if (!hasStepRun(seuratObj, 'FindVariableFeatures')) {
     seuratObj <- FindVariableFeatures(object = seuratObj, selection.method = 'mean.var.plot', mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf))
@@ -114,22 +84,18 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T){
   
   if (!hasStepRun(seuratObj, 'ScaleData')) {
     seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"))
-    seuratObj <- markStepRun(seuratObj, 'ScaleData')
+    seuratObj <- markStepRun(seuratObj, 'ScaleData', saveFile)
   }
   
   if (!hasStepRun(seuratObj, 'RunPCA')) {
     seuratObj <- RunPCA(object = seuratObj, features = VariableFeatures(object = seuratObj), verbose = FALSE)
-    seuratObj <- markStepRun(seuratObj, 'RunPCA')
+    seuratObj <- markStepRun(seuratObj, 'RunPCA', saveFile)
   }
   
-  if (doCellCycle & !hasStepRun(seuratObj, 'CellCycle')) {
-    seuratObj <- removeCellCycle(seuratObj)
-    seuratObj <- markStepRun(seuratObj, 'CellCycle', saveFile)
-  }
   
   if (!hasStepRun(seuratObj, 'ProjectDim')) {
     seuratObj <- ProjectDim(object = seuratObj)
-    seuratObj <- markStepRun(seuratObj, 'ProjectDim')
+    seuratObj <- markStepRun(seuratObj, 'ProjectDim', saveFile)
   }
   
   if (!hasStepRun(seuratObj, 'JackStraw')) {
@@ -144,6 +110,7 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T){
   
   return(seuratObj)
 }
+
 
 appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA){
   tcr <- processAndAggregateTcrClonotypes(clonotypeFile)
@@ -229,55 +196,4 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
   }
   
   return(tcr)
-}
-
-removeCellCycle <- function(seuratObj) {
-    print("Performing cell cycle cleaning ...")
-    
-    con <- url("https://raw.githubusercontent.com/bbimber/rnaseq/master/data/cellCycle/regev_lab_cell_cycle_genes.txt")
-    cc.genes <- readLines(con = con, warn = F)
-    close(con)
-    if (length(cc.genes) != 97) {
-      stop('Something went wrong downloading gene list')
-    }
-    
-    con <- url("https://raw.githubusercontent.com/bbimber/rnaseq/master/data/cellCycle/G2M.txt")
-    g2m.genes <- readLines(con =  con)
-    close(con)
-    
-    # We can segregate this list into markers of G2/M phase and markers of S-phase
-    s.genes <- cc.genes[1:43]
-    g2m.genes <- unique(c(g2m.genes, cc.genes[44:97]))
-    
-    s.genes <- s.genes[which(s.genes %in% rownames(seuratObj))]
-    g2m.genes <- g2m.genes[which(g2m.genes %in% rownames(seuratObj))]
-    
-    print("Running PCA with cell cycle genes")
-    seuratObj <- RunPCA(object = seuratObj, pc.genes = c(s.genes, g2m.genes), do.print = FALSE)
-    print(PCAPlot(seuratObj))
-    
-    #store values to append later
-    SeuratObjsCCPCA <- as.data.frame(SeuratObj@dr$pca@cell.embeddings)
-    colnames(SeuratObjsCCPCA) <- paste(colnames(SeuratObjsCCPCA), "CellCycle", sep="_")
-    
-    seuratObj <- CellCycleScoring(object = seuratObj, 
-                                   s.genes = s.genes, 
-                                   g2m.genes = g2m.genes, 
-                                   set.ident = TRUE)
-    
-
-    print(PCAPlot(object = SeuratObjs, dim.1 = 1, dim.2 = 2))
-    
-    print("Regressing out S and G2M score ...")
-    seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = T)
-
-    print("Running PCA with variable genes ...")
-    seuratObj <- RunPCA(object = seuratObj, pc.genes = VariableFeatures(object = seuratObj), do.print = F)
-
-    for (colName in colnames(SeuratObjsCCPCA)) {
-      seuratObj[colName] <- SeuratObjsCCPCA[rownames(seuratObj)]  
-    }
-    
-    
-    return(seuratObj)
 }
