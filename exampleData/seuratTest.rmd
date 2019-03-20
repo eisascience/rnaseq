@@ -1,0 +1,113 @@
+---
+title: "SeuratTest"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
+library(knitr)
+library(ggplot2)
+library(Seurat)
+library(dplyr)
+
+source('../seurat/seuratFunctions.R')
+
+```
+
+## Define Datasets
+
+
+```{r}
+
+outPrefix <- 'testData'
+suffix <- 'raw'
+
+data <- list(
+  'Set1' = '10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293',
+  'Set2' = '10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
+  
+)
+
+dimsToUse <- 10
+resolutionToUse <- 0.6
+
+
+```
+
+## Load Raw Data
+
+
+```{r}
+
+
+seuratObjs <- list()
+
+for (datasetName in names(data)) {
+  print(paste0('Loading dataset: ', datasetName))
+
+  seuratRawData <- Read10X(data.dir = paste0(data[[datasetName]]))
+  seuratRawData <- performEmptyDropletFiltering(seuratRawData)
+  
+  seuratObj <- createSeuratObj(seuratRawData, project = datasetName)
+  printQcPlots1(seuratObj)
+
+  seuratObjs[datasetName] <- seuratObj
+
+  print(seuratObj)
+}
+
+rm(seuratRawData)
+
+
+```
+
+# Merge data
+
+```{r}
+
+seuratObj <- mergeSeuratObjs(seuratObjs, data)
+
+rm(seuratObjs)
+
+seuratObj
+
+```
+
+## Initial Processing
+
+```{r}
+
+# Reduce data size to run faster
+# seuratObj <- subset(seuratObj, cells = colnames(seuratObj)[1:500])
+
+seuratObj <- processSeurat1(seuratObj, doCellCycle = F, dimsToUse = 1:12)
+
+
+```
+
+
+## tSNE
+
+```{r}
+
+seuratObj <- findClustersAndRunTSNE(seuratObj, 1:dimsToUse)
+
+
+```
+
+
+```{r}
+
+saveFileMarkers <- paste0(outPrefix, '.', suffix, '.markers.rds')
+findMarkers(seuratObj, resolutionToUse, saveFileMarkers)
+
+
+```
+
+
+```{r}
+
+sessionInfo()
+
+```
