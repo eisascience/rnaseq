@@ -64,7 +64,7 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01) {
   print(paste0('Failing cells: ', sum(!e.out$is.cell, na.rm=TRUE)))
   
   #If there are any entries with FDR above the desired threshold and Limited==TRUE, it indicates that npts should be increased in the emptyDrops call.
-  ?print(table(Limited=e.out$Limited, Significant=e.out$is.cell))
+  print(table(Limited=e.out$Limited, Significant=e.out$is.cell))
   
   toPlot <- e.out[is.finite(e.out$LogProb),]
   if (nrow(toPlot) > 0) {
