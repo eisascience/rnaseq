@@ -404,3 +404,116 @@ createExampleData <- function(nRow = 100, nCol = 10){
                  gene.symbol=gene.symb, barcodes=cell.ids)
   return(tmpdir)
 }
+                           
+                           
+                           
+AddModuleScore_SERIII <- function(
+  #using Seurat v2, AddModuleScore and converting to v3
+  #this worked in v2 but their new version 3 breaks so this replaces it
+  
+  object,
+  genes.list = NULL,
+  genes.pool = NULL,
+  n.bin = 25,
+  seed.use = 1,
+  ctrl.size = 100,
+  use.k = FALSE,
+  enrich.name = "Cluster",
+  random.seed = 1
+) {
+  set.seed(seed = random.seed)
+  genes.old <- genes.list
+  if (use.k) {
+    genes.list <- list()
+    for (i in as.numeric(x = names(x = table(object@kmeans.obj[[1]]$cluster)))) {
+      genes.list[[i]] <- names(x = which(x = object@kmeans.obj[[1]]$cluster == i))
+    }
+    cluster.length <- length(x = genes.list)
+  } else {
+    if (is.null(x = genes.list)) {
+      stop("Missing input gene list")
+    }
+    genes.list <- lapply(
+      X = genes.list,
+      FUN = function(x) {
+        #return(intersect(x = x, y = rownames(x = object@data)))
+        return(intersect(x = x, y = rownames(object)))
+      }
+    )
+    cluster.length <- length(x = genes.list)
+  }
+  if (!all(LengthCheck(values = genes.list))) {
+    warning(paste(
+      'Could not find enough genes in the object from the following gene lists:',
+      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      'Attempting to match case...'
+    ))
+    genes.list <- lapply(
+      X = genes.old,
+      FUN = CaseMatch, match = rownames(x = object@data)
+    )
+  }
+  if (!all(LengthCheck(values = genes.list))) {
+    stop(paste(
+      'The following gene lists do not have enough genes present in the object:',
+      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      'exiting...'
+    ))
+  }
+  if (is.null(x = genes.pool)) {
+    genes.pool = rownames(object)
+  }
+  data.avg <- Matrix::rowMeans(object@assays$RNA@data[genes.pool, ])
+  data.avg <- data.avg[order(data.avg)]
+  data.cut <- as.numeric(x = Hmisc::cut2(
+    x = data.avg,
+    m = round(x = length(x = data.avg) / n.bin)
+  ))
+  names(x = data.cut) <- names(x = data.avg)
+  ctrl.use <- vector(mode = "list", length = cluster.length)
+  for (i in 1:cluster.length) {
+    genes.use <- genes.list[[i]]
+    for (j in 1:length(x = genes.use)) {
+      ctrl.use[[i]] <- c(
+        ctrl.use[[i]],
+        names(x = sample(
+          x = data.cut[which(x = data.cut == data.cut[genes.use[j]])],
+          size = ctrl.size,
+          replace = FALSE
+        ))
+      )
+    }
+  }
+  ctrl.use <- lapply(X = ctrl.use, FUN = unique)
+  ctrl.scores <- matrix(
+    data = numeric(length = 1L),
+    nrow = length(x = ctrl.use),
+    ncol = ncol(x = object@assays$RNA@data)
+  )
+
+  for (i in 1:length(ctrl.use)) {
+    genes.use <- ctrl.use[[i]]
+    ctrl.scores[i, ] <- Matrix::colMeans(x = object@assays$RNA@data[genes.use, ])
+  }
+  genes.scores <- matrix(
+    data = numeric(length = 1L),
+    nrow = cluster.length,
+    ncol = ncol(x = object@assays$RNA@data)
+  )
+  for (i in 1:cluster.length) {
+    genes.use <- genes.list[[i]]
+    data.use <- object@assays$RNA@data[genes.use, , drop = FALSE]
+    genes.scores[i, ] <- Matrix::colMeans(x = data.use)
+  }
+  genes.scores.use <- genes.scores - ctrl.scores
+  rownames(x = genes.scores.use) <- paste0(enrich.name, 1:cluster.length)
+  genes.scores.use <- as.data.frame(x = t(x = genes.scores.use))
+  rownames(x = genes.scores.use) <- colnames(x = object@assays$RNA@data)
+  object <- AddMetaData(
+    object = object,
+    metadata = genes.scores.use,
+    col.name = colnames(x = genes.scores.use)
+  )
+  gc(verbose = FALSE)
+  return(object)
+}
