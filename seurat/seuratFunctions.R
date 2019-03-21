@@ -7,6 +7,16 @@ library(DropletUtils)
 
 labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
 
+readAndFilter10xData <- function(dataDir, datasetName) {
+  seuratRawData <- Read10X(data.dir = dataDir)
+  seuratRawData <- performEmptyDropletFiltering(seuratRawData)
+  
+  seuratObj <- createSeuratObj(seuratRawData, project = datasetName)
+  printQcPlots1(seuratObj)
+
+  return(seuratObj)  
+}
+
 createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25, minCells = 0){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = minCells, min.features = minFeatures, project = project)
   
@@ -106,7 +116,7 @@ mergeSeuratObjs <- function(seuratObjs, data){
 
 processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFilter = F,
                            nUMI.high = 20000, nGene.high = 3000, pMito.high = 0.15,
-                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, dimsToUse = 1:10){
+                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf){
   
   if(doCellFilter & !hasStepRun(seuratObj, 'FilterCells')) {
     print("Filtering Cells...")
@@ -148,11 +158,6 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   if (!hasStepRun(seuratObj, 'ProjectDim')) {
     seuratObj <- ProjectDim(object = seuratObj)
     seuratObj <- markStepRun(seuratObj, 'ProjectDim')
-  }
-  
-  if (!hasStepRun(seuratObj, 'FindNeighbors')) {
-    seuratObj <- FindNeighbors(object = seuratObj, dims = dimsToUse)
-    seuratObj <- markStepRun(seuratObj, 'FindNeighbors')
   }
   
   if (!hasStepRun(seuratObj, 'JackStraw')) {
@@ -314,18 +319,23 @@ removeCellCycle <- function(seuratObj) {
   return(seuratObj)
 }
 
-findClustersAndRunTSNE <- function(seuratObj, dimsToUse) {
+findClustersAndRunTSNE <- function(seuratObj, dimsToUse, saveFile = NULL) {
+  if (!hasStepRun(seuratObj, 'FindNeighbors')) {
+    seuratObj <- FindNeighbors(object = seuratObj, dims = dimsToUse)
+    seuratObj <- markStepRun(seuratObj, 'FindNeighbors')
+  }
+  
   if (!hasStepRun(seuratObj, 'FindClusters')) {
     for (resolution in c(0.2, 0.4, 0.8, 1.2, 0.6)){
       seuratObj <- FindClusters(object = seuratObj, resolution = resolution)
       seuratObj[[paste0("ClusterNames_", resolution)]] <- Idents(object = seuratObj)
-      seuratObj <- markStepRun(seuratObj, 'FindClusters')
+      seuratObj <- markStepRun(seuratObj, 'FindClusters', saveFile)
     }
   }
   
   if (!hasStepRun(seuratObj, 'RunTSNE')) {
     seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse)
-    seuratObj <- markStepRun(seuratObj, 'RunTSNE')
+    seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
   
   plot1 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.2", label = TRUE) + ggtitle('Resolution: 0.2')
@@ -336,9 +346,10 @@ findClustersAndRunTSNE <- function(seuratObj, dimsToUse) {
   
   print(CombinePlots(plots = list(plot1, plot2, plot3, plot4, plot5), legend = 'none'))
   
+  return(seuratObj)
 }
 
-findMarkers <- function(seuratObj, resolutionToUse, saveFileMarkers = NULL) {
+findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = NULL) {
   Idents(seuratObj) <- seuratObj[[paste0('ClusterNames_',resolutionToUse)]]
   
   if (file.exists(saveFileMarkers)) {
@@ -351,10 +362,12 @@ findMarkers <- function(seuratObj, resolutionToUse, saveFileMarkers = NULL) {
   
   toPlot <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster)  %>% filter(avg_logFC > 0.5) %>% top_n(9, avg_logFC) %>% select(gene)
   
-  write.table(toPlot, file = paste0(outPrefix, '.', suffix, '.markers.txt'), sep = '\t', row.names = F, quote = F)
+  write.table(toPlot, file = outFile, sep = '\t', row.names = F, quote = F)
   
   print(DimPlot(object = seuratObj, reduction = 'tsne'))
   
   top10 <- seuratObj.markers %>% group_by(cluster) %>% top_n(10, avg_logFC)
   print(DoHeatmap(object = seuratObj, features = top10$gene))
+  
+  return(toPlot)
 }

@@ -47,19 +47,10 @@ seuratObjs <- list()
 
 for (datasetName in names(data)) {
   print(paste0('Loading dataset: ', datasetName))
+  seuratObjs[datasetName] <- readAndFilter10xData(paste0(data[[datasetName]]), datasetName)
 
-  seuratRawData <- Read10X(data.dir = paste0(data[[datasetName]]))
-  seuratRawData <- performEmptyDropletFiltering(seuratRawData)
-  
-  seuratObj <- createSeuratObj(seuratRawData, project = datasetName)
-  printQcPlots1(seuratObj)
-
-  seuratObjs[datasetName] <- seuratObj
-
-  print(seuratObj)
+  print(seuratObjs[datasetName])
 }
-
-rm(seuratRawData)
 
 
 ```
@@ -83,7 +74,7 @@ seuratObj
 # Reduce data size to run faster
 # seuratObj <- subset(seuratObj, cells = colnames(seuratObj)[1:500])
 
-seuratObj <- processSeurat1(seuratObj, doCellCycle = F, dimsToUse = 1:12)
+seuratObj <- processSeurat1(seuratObj, doCellCycle = F)
 
 
 ```
@@ -93,16 +84,17 @@ seuratObj <- processSeurat1(seuratObj, doCellCycle = F, dimsToUse = 1:12)
 
 ```{r}
 
-seuratObj <- findClustersAndRunTSNE(seuratObj, 1:dimsToUse)
+
+seuratObj <- findClustersAndRunTSNE(seuratObj, 1:dimsToUse, saveFile = saveFile)
 
 
 ```
 
+## Find Markers
 
 ```{r}
 
-saveFileMarkers <- paste0(outPrefix, '.', suffix, '.markers.rds')
-findMarkers(seuratObj, resolutionToUse, saveFileMarkers)
+findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.', suffix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.', suffix, '.markers.rds'))
 
 
 ```
