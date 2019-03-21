@@ -7,7 +7,7 @@ library(DropletUtils)
 
 labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
 
-createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25, minCells = 1){
+createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25, minCells = 0){
   seuratObj <- CreateSeuratObject(counts = seuratData, min.cells = minCells, min.features = minFeatures, project = project)
   
   mito.features <- grep(pattern = "^MT-", x = rownames(x = seuratObj), value = TRUE)

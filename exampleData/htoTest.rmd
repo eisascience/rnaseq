@@ -3,16 +3,16 @@
 source('../seurat/cellHashingFunctions.R')
 
 #Relatively good input.  Several outlier cells with extremely high counts.
-barcodeFile <- '247-1-hashTagCounts.txt'
+barcodeFile <- 'cellHashing/247-1-hashTagCounts.txt'
 
 #Extremely high doublets
-#barcodeFile <- '267-1-citeSeqCounts.txt'
+#barcodeFile <- 'cellHashing/267-1-citeSeqCounts.txt'
 
-#barcodeFile <- '267-2-citeSeqCounts.txt'
+#barcodeFile <- 'cellHashing/267-2-citeSeqCounts.txt'
 
-#barcodeFile <- '253-1-citeSeqCounts.txt'
+#barcodeFile <- 'cellHashing/253-1-citeSeqCounts.txt'
 
-#barcodeFile <- '248-7-citeSeqCounts.txt'
+#barcodeFile <- 'cellHashing/248-7-citeSeqCounts.txt'
 finalCallFile <- 'finalCalls.txt'
 
 ```

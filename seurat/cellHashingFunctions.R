@@ -54,6 +54,7 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
   countPerRow <- colSums(apply(barcodeMatrix, 1, function(x){
     as.integer(x > minRowMax)
   }))
+  names(countPerRow) <- c('TotalCellsAboveThreshold')
   
   print('Total Cells per HTO above theshold:')
   print(kable(countPerRow))
@@ -360,7 +361,7 @@ processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCa
   
   if (all(is.na(sc))){
     print('No calls for seurat found')  
-    dt <- data.table(CellBarcode = mc$Barcode, HTO = mc$HTO_classification, HTO_Classification = mc$HTO_classification.global, key = 'CellBarcode')
+    dt <- data.table(CellBarcode = mc$Barcode, HTO = mc$HTO_classification, HTO_Classification = mc$HTO_classification.global, key = 'CellBarcode', Seurat = c(F), MultiSeq = c(T))
     dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
@@ -369,7 +370,7 @@ processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCa
   
   if (all(is.na(mc))){
     print('No calls for MULTI-seq found')  
-    dt <- data.table(CellBarcode = sc$Barcode, HTO = sc$HTO_classification, HTO_Classification = sc$HTO_classification.global, key = 'CellBarcode')
+    dt <- data.table(CellBarcode = sc$Barcode, HTO = sc$HTO_classification, HTO_Classification = sc$HTO_classification.global, key = 'CellBarcode', Seurat = c(T), MultiSeq = c(F))
     dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
@@ -383,6 +384,8 @@ processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCa
   merged$Concordant <- as.character(merged$HTO_classification.MultiSeq) == as.character(merged$HTO_classification.Seurat)
   merged$ConcordantNoNeg <- !(!merged$Concordant & merged$HTO_classification.MultiSeq != 'Negative' & merged$HTO_classification.Seurat != 'Negative')
   merged$GlobalConcordant <- as.character(merged$HTO_classification.global.MultiSeq) == as.character(merged$HTO_classification.global.Seurat)
+  merged$HasSeuratCall <- !is.na(merged$HTO_classification.Seurat) & merged$HTO_classification.Seurat != 'Negative'
+  merged$HasMultiSeqCall <- !is.na(merged$HTO_classification.MultiSeq) & merged$HTO_classification.MultiSeq != 'Negative'
   
   print(paste0('Total concordant: ', nrow(merged[merged$Concordant])))
   print(paste0('Total discordant: ', nrow(merged[!merged$Concordant])))
@@ -430,7 +433,7 @@ processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCa
   }
   
   if (nrow(ret) > 0){
-    dt <- data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode')
+    dt <- data.table(CellBarcode = ret$Barcode, HTO = ret$FinalCall, HTO_Classification = ret$FinalClassification, key = 'CellBarcode', Seurat = ret$HasSeuratCall, MultiSeq = ret$HasMultiSeqCall)
     dt <- printFinalSummary(dt, barcodeData)
     write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
     
@@ -467,5 +470,10 @@ printFinalSummary <- function(dt, barcodeData){
           theme(axis.text.x = element_text(angle = 90, hjust = 1))
   )
 
+  t <- table(SeuratCall = merged$Seurat, MultiSeqCall = merged$MultiSeq)
+  colnames(t) <- c('MultiSeq No Call', 'MultiSeq Call')
+  rownames(t) <- c('Seurat No Call', 'Seurat Call')
+  print(kable(t))
+  
   return(merged)
 }
