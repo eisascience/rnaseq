@@ -4,6 +4,7 @@ library(data.table)
 library(dplyr)
 library(naturalsort)
 library(DropletUtils)
+library(Matrix)
 
 labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
 
@@ -386,4 +387,20 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
   print(DoHeatmap(object = seuratObj, features = top10$gene))
   
   return(toPlot)
+}
+
+createExampleData <- function(nRow = 100, nCol = 10){
+  my.counts <- matrix(rpois(1000, lambda=5), ncol=nCol, nrow=nRow)
+  my.counts <- as(my.counts, "dgCMatrix")
+  cell.ids <- paste0("BARCODE-", seq_len(ncol(my.counts)))
+  
+  ngenes <- nrow(my.counts)
+  gene.ids <- paste0("ENSG0000", seq_len(ngenes))
+  gene.symb <- paste0("GENE", seq_len(ngenes))
+  
+  # Writing this to file:
+  tmpdir <- tempfile()
+  write10xCounts(tmpdir, my.counts, gene.id=gene.ids, 
+                 gene.symbol=gene.symb, barcodes=cell.ids)
+  return(tmpdir)
 }
