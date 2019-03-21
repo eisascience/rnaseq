@@ -341,16 +341,7 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse, saveFile = NULL) {
     seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE)
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
-  
-  plot1 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.2", label = TRUE) + ggtitle('Resolution: 0.2')
-  plot2 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.4", label = TRUE) + ggtitle('Resolution: 0.4')
-  plot3 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.6", label = TRUE) + ggtitle('Resolution: 0.6')
-  plot4 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.8", label = TRUE) + ggtitle('Resolution: 0.8')
-  plot5 <- DimPlot(object = seuratObj, group.by = "ClusterNames_1.2", label = TRUE) + ggtitle('Resolution: 1.2')
-  
-  print(CombinePlots(plots = list(plot1, plot2, plot3, plot4, plot5), legend = 'none'))
-  
-  #this worked for me.
+
   if (!hasStepRun(seuratObj, 'RunUMAP')) {
     seuratObj <- RunUMAP(seuratObj,
                          dims = dimsToUse,
@@ -361,8 +352,19 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse, saveFile = NULL) {
     seuratObj <- markStepRun(seuratObj, 'RunUMAP', saveFile)
   }
   
-  print(DimPlot(object = seuratObj, reduction = "umap") + ggtitle('UMAP'))
+  for (reduction in c('tsne', 'umap')){
+    plot1 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_0.2", label = TRUE) + ggtitle('Resolution: 0.2')
+    plot2 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_0.4", label = TRUE) + ggtitle('Resolution: 0.4')
+    plot3 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_0.6", label = TRUE) + ggtitle('Resolution: 0.6')
+    plot4 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_0.8", label = TRUE) + ggtitle('Resolution: 0.8')
+    plot5 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_1.2", label = TRUE) + ggtitle('Resolution: 1.2')
+    
+    print(CombinePlots(plots = list(plot1, plot2, plot3, plot4, plot5), legend = 'none'))
+    
+    #print(DimPlot(object = seuratObj, reduction = reduction, group.by = "BarcodePrefix", label = TRUE) + ggtitle('Dataset'))
+  }
   
+
   return(seuratObj)
 }
 
