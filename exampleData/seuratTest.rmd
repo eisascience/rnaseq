@@ -21,16 +21,16 @@ source('../seurat/seuratFunctions.R')
 
 ```{r}
 
+#Create Test Data:
+#data1 <- createExampleData(nCol = 10, nRow = 100)
+
 outPrefix <- 'testData'
-suffix <- 'raw'
 
 data <- list(
-  'Set1' = '10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293',
-  'Set2' = '10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
-  
+  'Set1' = '10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293'
+  #'Set2' = '10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
 )
 
-dimsToUse <- 10
 resolutionToUse <- 0.6
 
 
@@ -71,8 +71,6 @@ seuratObj
 
 ```{r}
 
-# Reduce data size to run faster
-# seuratObj <- subset(seuratObj, cells = colnames(seuratObj)[1:500])
 
 seuratObj <- processSeurat1(seuratObj, doCellCycle = F)
 
@@ -84,8 +82,7 @@ seuratObj <- processSeurat1(seuratObj, doCellCycle = F)
 
 ```{r}
 
-
-seuratObj <- findClustersAndDimRedux(seuratObj, 1:dimsToUse)
+seuratObj <- findClustersAndDimRedux(seuratObj)
 
 
 ```
@@ -94,7 +91,7 @@ seuratObj <- findClustersAndDimRedux(seuratObj, 1:dimsToUse)
 
 ```{r}
 
-findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.', suffix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.', suffix, '.markers.rds'))
+findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
 
 
 ```
