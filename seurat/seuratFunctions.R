@@ -91,10 +91,12 @@ markStepRun <- function(seuratObj, name, saveFile = NULL) {
 }
 
 mergeSeuratObjs <- function(seuratObjs, data){
+  seuratObj <- NULL
   for (exptNum in names(data)) {
     print(paste0('adding expt: ', exptNum))
-    seuratObjs[[exptNum]] <- RenameCells(object = seuratObjs[[exptNum]], add.cell.id = exptNum)
-    seuratObjs[[exptNum]]
+    prefix <- paste0(exptNum)
+    seuratObjs[[exptNum]] <- RenameCells(object = seuratObjs[[exptNum]], add.cell.id = prefix)
+    seuratObjs[[exptNum]][['BarcodePrefix']] <- c(prefix)
     
     if (is.null(seuratObj)) {
       seuratObj <- seuratObjs[[exptNum]]
@@ -319,7 +321,7 @@ removeCellCycle <- function(seuratObj) {
   return(seuratObj)
 }
 
-findClustersAndRunTSNE <- function(seuratObj, dimsToUse, saveFile = NULL) {
+findClustersAndDimRedux <- function(seuratObj, dimsToUse, saveFile = NULL) {
   if (!hasStepRun(seuratObj, 'FindNeighbors')) {
     seuratObj <- FindNeighbors(object = seuratObj, dims = dimsToUse)
     seuratObj <- markStepRun(seuratObj, 'FindNeighbors')
@@ -334,7 +336,8 @@ findClustersAndRunTSNE <- function(seuratObj, dimsToUse, saveFile = NULL) {
   }
   
   if (!hasStepRun(seuratObj, 'RunTSNE')) {
-    seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse)
+    #See: https://github.com/satijalab/seurat/issues/167
+    seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE)
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
   
@@ -345,6 +348,19 @@ findClustersAndRunTSNE <- function(seuratObj, dimsToUse, saveFile = NULL) {
   plot5 <- DimPlot(object = seuratObj, group.by = "ClusterNames_1.2", label = TRUE) + ggtitle('Resolution: 1.2')
   
   print(CombinePlots(plots = list(plot1, plot2, plot3, plot4, plot5), legend = 'none'))
+  
+  #this worked for me.
+  if (!hasStepRun(seuratObj, 'RunUMAP')) {
+    seuratObj <- RunUMAP(seuratObj,
+                         dims = dimsToUse,
+                         n.neighbors = 40L,
+                         min.dist = 0.2,
+                         metric = "correlation",
+                         seed.use = 1234)
+    seuratObj <- markStepRun(seuratObj, 'RunUMAP', saveFile)
+  }
+  
+  print(DimPlot(object = seuratObj, reduction = "umap") + ggtitle('UMAP'))
   
   return(seuratObj)
 }

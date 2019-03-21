@@ -85,7 +85,7 @@ seuratObj <- processSeurat1(seuratObj, doCellCycle = F)
 ```{r}
 
 
-seuratObj <- findClustersAndRunTSNE(seuratObj, 1:dimsToUse, saveFile = saveFile)
+seuratObj <- findClustersAndDimRedux(seuratObj, 1:dimsToUse)
 
 
 ```
