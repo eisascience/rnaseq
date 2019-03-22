@@ -1,3 +1,6 @@
 
 exampleData/combinedHtoCalls.txt
 exampleData/finalCalls.txt
+exampleData/10xCounts/*
+exampleData/savedSeurat.rds
+.Rhistory

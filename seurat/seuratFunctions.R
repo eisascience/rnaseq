@@ -771,8 +771,10 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
     points(DF$x[edm], DF$y[edm], pch = 20)
   }
   
-  if (is.na(which.max(DF$dist)) {
+  if (is.na(which.max(DF$dist))) {
     #if all fails return 2
-    return(2) else return(which.max(DF$dist))
+    return(2) 
+  } else {
+    return(which.max(DF$dist))
   }    
 }
