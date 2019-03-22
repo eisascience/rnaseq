@@ -471,8 +471,13 @@ printFinalSummary <- function(dt, barcodeData){
   )
 
   t <- table(SeuratCall = merged$Seurat, MultiSeqCall = merged$MultiSeq)
-  colnames(t) <- c('MultiSeq No Call', 'MultiSeq Call')
-  rownames(t) <- c('Seurat No Call', 'Seurat Call')
+  
+  colnames(t)[colnames(t) == T] <- c('MultiSeq Call')
+  colnames(t)[colnames(t) == F] <- c('MultiSeq No Call')
+  
+  rownames(t)[rownames(t) == T] <- c('Seurat Call')
+  rownames(t)[rownames(t) == F] <- c('Seurat No Call')
+  
   print(kable(t))
   
   return(merged)
