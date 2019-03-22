@@ -149,22 +149,22 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   }
   
   if (!hasStepRun(seuratObj, 'NormalizeData')) {
-    seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize")
+    seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize", verbose = F)
     seuratObj <- markStepRun(seuratObj, 'NormalizeData', saveFile)
   }
   
   if (!hasStepRun(seuratObj, 'FindVariableFeatures')) {
-    seuratObj <- FindVariableFeatures(object = seuratObj, selection.method = 'mean.var.plot', mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf))
+    seuratObj <- FindVariableFeatures(object = seuratObj, selection.method = 'mean.var.plot', mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf), verbose = F)
     seuratObj <- markStepRun(seuratObj, 'FindVariableFeatures', saveFile)
   }
   
   if (!hasStepRun(seuratObj, 'ScaleData')) {
-    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"), display.progress = F)
+    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"), display.progress = F, verbose = F)
     seuratObj <- markStepRun(seuratObj, 'ScaleData')
   }
   
   if (!hasStepRun(seuratObj, 'RunPCA')) {
-    seuratObj <- RunPCA(object = seuratObj, features = VariableFeatures(object = seuratObj), verbose = FALSE)
+    seuratObj <- RunPCA(object = seuratObj, features = VariableFeatures(object = seuratObj), verbose = F)
     seuratObj <- markStepRun(seuratObj, 'RunPCA')
   }
   
@@ -179,7 +179,7 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   }
   
   if (!hasStepRun(seuratObj, 'JackStraw')) {
-    seuratObj <- JackStraw(object = seuratObj, num.replicate = 100)
+    seuratObj <- JackStraw(object = seuratObj, num.replicate = 100, verbose = F)
     seuratObj <- markStepRun(seuratObj, 'JackStraw', saveFile)
   }
   
@@ -322,7 +322,7 @@ removeCellCycle <- function(seuratObj) {
   }
   
   print("Running PCA with cell cycle genes")
-  seuratObj <- RunPCA(object = seuratObj, pc.genes = c(s.genes, g2m.genes), do.print = FALSE)
+  seuratObj <- RunPCA(object = seuratObj, pc.genes = c(s.genes, g2m.genes), do.print = FALSE, verbose = F)
   print(DimPlot(object = seuratObj, reduction = "pca"))
   
   #store values to append later
@@ -339,12 +339,12 @@ removeCellCycle <- function(seuratObj) {
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(3, 4)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(4, 5)) ))
   )
-  
+
   print("Regressing out S and G2M score ...")
-  seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = F)
+  seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = F, verbose = F)
   
   print("Running PCA with variable genes ...")
-  seuratObj <- RunPCA(object = seuratObj, pc.genes = VariableFeatures(object = seuratObj), do.print = F)
+  seuratObj <- RunPCA(object = seuratObj, pc.genes = VariableFeatures(object = seuratObj), do.print = F, verbose = F)
   
   for (colName in colnames(SeuratObjsCCPCA)) {
     seuratObj[[colName]] <- SeuratObjsCCPCA[colnames(seuratObj),colName]  
@@ -398,11 +398,8 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
     plot5 <- DimPlot(object = seuratObj, reduction = reduction, group.by = "ClusterNames_1.2", label = TRUE) + ggtitle('Resolution: 1.2')
     
     print(CombinePlots(plots = list(plot1, plot2, plot3, plot4, plot5), legend = 'none'))
-    
-    #print(DimPlot(object = seuratObj, reduction = reduction, group.by = "BarcodePrefix", label = TRUE) + ggtitle('Dataset'))
   }
   
-
   return(seuratObj)
 }
 
@@ -413,7 +410,7 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
     print('resuming from file')
     seuratObj.markers <- readRDS(saveFileMarkers)
   } else {
-    seuratObj.markers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+    seuratObj.markers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, verbose = F)
     saveRDS(seuratObj.markers, file = saveFileMarkers)
   }
   
@@ -514,7 +511,6 @@ AddModuleScore_SERIII <- function(
     genes.list <- lapply(
       X = genes.list,
       FUN = function(x) {
-        #return(intersect(x = x, y = rownames(x = object@data)))
         return(intersect(x = x, y = rownames(object)))
       }
     )

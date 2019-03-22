@@ -72,7 +72,7 @@ seuratObj
 ```{r}
 
 
-seuratObj <- processSeurat1(seuratObj, doCellCycle = F)
+seuratObj <- processSeurat1(seuratObj, doCellCycle = T)
 
 
 ```
