@@ -123,7 +123,7 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
                            nUMI.high = 20000, nGene.high = 3000, pMito.high = 0.15,
                            nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf){
   
-  if(doCellFilter & !hasStepRun(seuratObj, 'FilterCells')) {
+  if (doCellFilter & !hasStepRun(seuratObj, 'FilterCells')) {
     print("Filtering Cells...")
     seuratObj@misc$OriginalCells <- length(colnames(x = seuratObj))
     seuratObj <- subset(x = seuratObj, subset = nCount_RNA > nGene.low & nCount_RNA < nGene.high)
@@ -296,12 +296,12 @@ removeCellCycle <- function(seuratObj) {
   s.genes <- s.genes[which(s.genes %in% rownames(seuratObj))]
   g2m.genes <- g2m.genes[which(g2m.genes %in% rownames(seuratObj))]
   
-  if(length(g2m.genes) < 20 || length(s.genes) < 20) {
+  if (length(g2m.genes) < 20 || length(s.genes) < 20) {
     print("Warning, the number of g2m and/or s genes in your data has low coverage")
   }
   
   #proceeds <20 but warns, but <5 is fishy and cant use
-  if(length(g2m.genes) < 5 || length(s.genes) < 5) {
+  if (length(g2m.genes) < 5 || length(s.genes) < 5) {
     print("Error, the number of g2m and/or s genes < 5")
     #break()
     seuratObj <- markStepRun(seuratObj, 'FAIL_removeCellCycle')
@@ -600,10 +600,13 @@ findSeuratElbow <- function(seuratObj, ndims = 25, reduction = "pca", print.plot
   #1 sd = 1.3
   #the findElbow should not fail, internally if it does it should return 2. But for whatever reason unpredicted it fails, this will capture it.
   elbowX <- try(findElbow(data.use[1:ndims], plot = F, returnIndex = TRUE, ignore.concavity=F, min.y = 1.3))
-  if(class(elbowX)=="try-error" || elbowX[1]==2) {
-    if(is.null(ndims)){
+  if (class(elbowX)=="try-error" || elbowX[1]==2) {
+    if (is.null(ndims)){
       elbowX = 2
-      } else elbowX = ndims
+    } else {
+      elbowX = ndims
+    }
+  }
   
   plot <- ggplot(data = data.frame(dims = 1:ndims, stdev = data.use[1:ndims])) +
     geom_point(mapping = aes_string(x = "dims", y = "stdev")) +
@@ -681,19 +684,19 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
     ans <- NULL
     ix <- iy <- 0   # intersecting point
     lineMag <- lineMagnitude(x1, y1, x2, y2)
-    if(any(lineMag < 0.00000001)) { # modified for vectorization by BAH
+    if (any(lineMag < 0.00000001)) { # modified for vectorization by BAH
       #warning("short segment")
       #return(9999)
       warning("At least one line segment given by x1, y1, x2, y2 is very short.")
     }
     u <- (((px - x1) * (x2 - x1)) + ((py - y1) * (y2 - y1)))
     u <- u / (lineMag * lineMag)
-    if(any((u < 0.00001) || (u > 1))) { # BAH added any to vectorize
+    if (any((u < 0.00001) || (u > 1))) { # BAH added any to vectorize
       ## closest point does not fall within the line segment, take the shorter distance
       ## to an endpoint
       ix <- lineMagnitude(px, py, x1, y1)
       iy <- lineMagnitude(px, py, x2, y2)
-      if(ix > iy)  ans <- iy
+      if (ix > iy)  ans <- iy
       else ans <- ix
     } else {
       ## Intersecting point is on the line, use the formula
