@@ -15,7 +15,7 @@ readAndFilter10xData <- function(dataDir, datasetName) {
   seuratRawData <- performEmptyDropletFiltering(seuratRawData)
   
   seuratObj <- createSeuratObj(seuratRawData, project = datasetName)
-  printQcPlots1(seuratObj)
+  printQcPlots(seuratObj)
 
   return(seuratObj)  
 }
@@ -30,7 +30,7 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25, min
   return(seuratObj)
 }
 
-printQcPlots1 <- function(seuratObj) {
+printQcPlots <- function(seuratObj) {
   print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "p.mito"), ncol = 3))
   
   print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "p.mito"))
@@ -216,7 +216,7 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
   tcr <- read.table(clonotypeFile, header=T, sep = ',')
   tcr <- tcr[tcr$cdr3 != 'None',]
   
-  # drop cellrange '-1' suffix
+  # drop cellranger '-1' suffix
   tcr$barcode <- gsub("-1", "", tcr$barcode)
   
   #Download named clonotypes and merge:
@@ -296,7 +296,10 @@ removeCellCycle <- function(seuratObj) {
   s.genes <- s.genes[which(s.genes %in% rownames(seuratObj))]
   g2m.genes <- g2m.genes[which(g2m.genes %in% rownames(seuratObj))]
   
-  if(length(g2m.genes) < 20 || length(s.genes) < 20) print("Warning, the number of g2m and/or s genes in your data has low coverage")
+  if(length(g2m.genes) < 20 || length(s.genes) < 20) {
+    print("Warning, the number of g2m and/or s genes in your data has low coverage")
+  }
+  
   #proceeds <20 but warns, but <5 is fishy and cant use
   if(length(g2m.genes) < 5 || length(s.genes) < 5) {
     print("Error, the number of g2m and/or s genes < 5")
@@ -317,8 +320,7 @@ removeCellCycle <- function(seuratObj) {
                                 s.features = s.genes, 
                                 g2m.features = g2m.genes, 
                                 set.ident = TRUE)
-  
-  #print(DimPlot(object = seuratObj, reduction = "pca"))
+    
   print(cowplot::plot_grid(plotlist = list(DimPlot(object = seuratObj, reduction = "pca", dims = c(1, 2)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(2, 3)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(3, 4)),
@@ -430,8 +432,7 @@ createExampleData <- function(nRow = 100, nCol = 10){
   return(tmpdir)
 }
                            
- CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident = FALSE)
-{
+CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident = FALSE) {
   enrich.name <- 'Cell Cycle'
   genes.list <- list('S.Score' = s.features, 'G2M.Score' = g2m.features)
   object.cc <- AddModuleScore_SERIII(
@@ -459,7 +460,7 @@ createExampleData <- function(nRow = 100, nCol = 10){
   colnames(x = cc.scores) <- c('rownames', 'S.Score', 'G2M.Score', 'Phase')
   rownames(x = cc.scores) <- cc.scores$rownames
   cc.scores <- cc.scores[, c('S.Score', 'G2M.Score', 'Phase')]
-  #object <- AddMetaData(object = object, metadata = cc.scores)
+  
   object$S.Score <- cc.scores$S.Score
   object$G2M.Score <- cc.scores$G2M.Score
   object$Phase <- cc.scores$Phase
@@ -467,9 +468,6 @@ createExampleData <- function(nRow = 100, nCol = 10){
   if (set.ident) {
     object$old.or.idents <- Idents(object = object)
     Idents(object = object) <- cc.scores$Phase
-
-    #object <- StashIdent(object = object, save.name = 'old.ident')
-    #object$Phase <- SetAllIdent(object = object, id = 'Phase')
   }
   return(object)
 }
@@ -576,15 +574,13 @@ AddModuleScore_SERIII <- function(
   rownames(x = genes.scores.use) <- paste0(enrich.name, 1:cluster.length)
   genes.scores.use <- as.data.frame(x = t(x = genes.scores.use))
   rownames(x = genes.scores.use) <- colnames(x = object@assays$RNA@data)
-  # object <- AddMetaData(
-  #  object = object,
-  #  metadata = genes.scores.use,
-  #  col.name = colnames(x = genes.scores.use)
-  # )
+
   for (colName in colnames(genes.scores.use)) {
     object[[colName]] <- genes.scores.use[colnames(object),colName]
   }
+  
   gc(verbose = FALSE)
+  
   return(object)
 }
 
@@ -616,7 +612,7 @@ findSeuratElbow <- function(seuratObj, ndims = 25, reduction = "pca", print.plot
   return(elbowX) 
 }
 
-findElbow <- function(y, plot = FALSE, ignore.concavity=F, min.y=NA, min.x=NA) {
+findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min.x = NA) {
   
   # minor modification to debug specic scenarios when fail to find elbow
   # The following helper functions were found at
@@ -732,16 +728,15 @@ findElbow <- function(y, plot = FALSE, ignore.concavity=F, min.y=NA, min.x=NA) {
   refpts <- m*DF$x[use] + b
   if (all(refpts > DF$y[use]) | all(refpts < DF$y[use])) concave <- TRUE
   if (!concave) {
-    print("Your curve doesn't appear to be concave")}
+    print("Your curve doesn't appear to be concave")
+  }
   
-  if(ignore.concavity) concave <- TRUE
-
-  
+  if (ignore.concavity) concave <- TRUE
   
   # Calculate the orthogonal distances
-  if(is.na(min.x)){
-    if(!is.na(min.y)){
-      if(!length(which(DF$y<=min.y))<1){
+  if (is.na(min.x)){
+    if (!is.na(min.y)){
+      if (!length(which(DF$y<=min.y))<1){
         min.x = min(DF[which(DF$y<=min.y), ]$x)
       } else {
         print("min.y greater than smallest y")
@@ -750,8 +745,7 @@ findElbow <- function(y, plot = FALSE, ignore.concavity=F, min.y=NA, min.x=NA) {
     } else {
       print("min.x and min.y are NA")
       min.x = 2
-    }
-    
+    }    
   }
   
   use     <- min.x:(nrow(DF)-1)
@@ -772,7 +766,5 @@ findElbow <- function(y, plot = FALSE, ignore.concavity=F, min.y=NA, min.x=NA) {
   if (is.na(which.max(DF$dist)) {
     #if all fails return 2
     return(2) else return(which.max(DF$dist))
-    }
-
-      
+  }    
 }
