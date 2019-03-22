@@ -539,7 +539,12 @@ findSeuratElbow <- function(seuratObj, ndims = 25, reduction = "pca", print.plot
   
   #TODO: what if this cant infer the elbow?  I think it will return a data.frame.
   #1 sd = 1.3
-  elbowX <- findElbow(data.use[1:ndims], plot = F, returnIndex = TRUE, ignore.concavity=F, min.y = 1.3)
+  #the findElbow should not fail, internally if it does it should return 2. But for whatever reason unpredicted it fails, this will capture it.
+  elbowX <- try(findElbow(data.use[1:ndims], plot = F, returnIndex = TRUE, ignore.concavity=F, min.y = 1.3))
+  if(class(elbowX)=="try-error" || elbowX[1]==2) {
+    if(is.null(ndims)){
+      elbowX = 2
+      } else elbowX = ndims
   
   plot <- ggplot(data = data.frame(dims = 1:ndims, stdev = data.use[1:ndims])) +
     geom_point(mapping = aes_string(x = "dims", y = "stdev")) +
