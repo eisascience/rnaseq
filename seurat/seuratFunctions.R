@@ -448,15 +448,15 @@ createExampleData <- function(nRow = 100, nCol = 10){
 CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident = FALSE) {
   enrich.name <- 'Cell Cycle'
   genes.list <- list('S.Score' = s.features, 'G2M.Score' = g2m.features)
-  object.cc <- AddModuleScore_SERIII(
+  object <- AddModuleScore_SERIII(
     object = object,
     genes.list = genes.list,
     enrich.name = enrich.name,
     ctrl.size = min(vapply(X = genes.list, FUN = length, FUN.VALUE = numeric(1)))
   )
-  cc.columns <- grep(pattern = enrich.name, x = colnames(x = object.cc@meta.data))
-  cc.scores <- object.cc@meta.data[, cc.columns]
-  rm(object.cc)
+  cc.columns <- grep(pattern = enrich.name, x = colnames(x = object@meta.data))
+  cc.scores <- object@meta.data[, cc.columns]
+  
   gc(verbose = FALSE)
   assignments <- apply(
     X = cc.scores,
