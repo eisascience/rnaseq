@@ -13,16 +13,19 @@ barcodeFile <- 'cellHashing/247-1-hashTagCounts.txt'
 #barcodeFile <- 'cellHashing/253-1-citeSeqCounts.txt'
 
 #fails both callers.  probably many negative cells
-barcodeFile <- 'cellHashing/249-2-HTO_cellHashingRawCounts.txt'
+barcodeFile <- 'cellHashing/260-3-HTO__cellHashingRawCounts.txt'
 finalCallFile <- 'finalCalls.txt'
 
 ```
 
 # Basic QC and Filtering on input:
 
-```{r}
+```{r QC}
 
 barcodeData <- processCiteSeqCount(barcodeFile)
+if (nrow(barcodeData) == 0) {
+  stop('No passing cells')
+}
 
 generateQcPlots(barcodeData)
 
@@ -32,7 +35,7 @@ generateQcPlots(barcodeData)
 
 # Using Seurat:
 
-```{r}
+```{r Seurat}
 
 
 sc <- generateCellHashCallsSeurat(barcodeData)
@@ -42,7 +45,7 @@ sc <- generateCellHashCallsSeurat(barcodeData)
 
 # Using MULTI-seq Classifier:
 
-```{r}
+```{r MULTI-seq}
 
 
 mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
@@ -52,7 +55,7 @@ mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
 
 
 
-```{r}
+```{r ProcessCalls}
 
 dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile)
 
