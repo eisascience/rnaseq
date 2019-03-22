@@ -79,10 +79,14 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
   }
   
   #repeat summary:
-  rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
-    sum(x > 0)
-  }))
-  print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
+  if (nrow(barcodeData) == 0) {
+    print('No HTOs remaining')
+  } else {
+    rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+      sum(x > 0)
+    }))
+    print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
+  }
   
   return(barcodeData)  
 }
