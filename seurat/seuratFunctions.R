@@ -32,7 +32,6 @@ createSeuratObj <- function(seuratData = NA, project = NA, minFeatures = 25, min
 
 printQcPlots <- function(seuratObj) {
   print(VlnPlot(object = seuratObj, features = c("nFeature_RNA", "nCount_RNA", "p.mito"), ncol = 3))
-  
   print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "p.mito"))
   print(FeatureScatter(object = seuratObj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"))
   
@@ -44,10 +43,10 @@ printQcPlots <- function(seuratObj) {
     sum(nUMI >= x)
   }))
   
-  plot(log(countAbove), log(nUMI), pch=20, ylab = "UMI/Cell", xlab = "# Cells")  
+  plot(log(countAbove), log(nUMI), pch=20, ylab = "UMI/Cell", xlab = "# Cells")
 }
 
-performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01) {
+performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, emptyDropNIters=10000) {
   br.out <- barcodeRanks(seuratRawData)
   
   # Making a plot.
@@ -59,25 +58,39 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01) {
   legend("bottomleft", lty=2, col=c("dodgerblue", "forestgreen"), 
          legend=c("knee", "inflection"))
   
-  e.out <- emptyDrops(seuratRawData)
-  print(paste0('Input cells: ', nrow(e.out)))
-  e.out <- e.out[!is.na(e.out$LogProb),]
-  e.out$is.cell <- e.out$FDR <= fdrThreshold
-  print(paste0('Passing cells: ', sum(e.out$is.cell, na.rm=TRUE)))
-  print(paste0('Failing cells: ', sum(!e.out$is.cell, na.rm=TRUE)))
-  
-  #If there are any entries with FDR above the desired threshold and Limited==TRUE, it indicates that npts should be increased in the emptyDrops call.
-  print(table(Limited=e.out$Limited, Significant=e.out$is.cell))
-  
+  e.out <- performEmptyDrops(seuratRawData, emptyDropNIters = emptyDropNIters, fdrThreshold = fdrThreshold)
+
   toPlot <- e.out[is.finite(e.out$LogProb),]
   if (nrow(toPlot) > 0) {
-    print(plot(toPlot$Total, -toPlot$LogProb, col=ifelse(toPlot$is.cell, "red", "black"), xlab="Total UMI count", ylab="-Log Probability"))
+    plot(toPlot$Total, -toPlot$LogProb, col=ifelse(toPlot$is.cell, "red", "black"), xlab="Total UMI count", ylab="-Log Probability")
   } else {
     print('Probabilities all -Inf, unable to plot')  
   }
   
   passingCells <- rownames(e.out)[e.out$is.cell]
+  
   return(seuratRawData[,passingCells])
+}
+
+performEmptyDrops <- function(seuratRawData, emptyDropNIters, fdrThreshold=0.01){
+  print(paste0('Performing emptyDrops with ', emptyDropNIters, ' iterations'))
+  
+  e.out <- emptyDrops(seuratRawData, niters = emptyDropNIters)
+  
+  print(paste0('Input cells: ', nrow(e.out)))
+  e.out <- e.out[!is.na(e.out$LogProb),]
+  e.out$is.cell <- e.out$FDR <= fdrThreshold
+  print(paste0('Cells passing FDR: ', sum(e.out$is.cell, na.rm=TRUE)))
+  print(paste0('Cells failing FDR: ', sum(!e.out$is.cell, na.rm=TRUE)))
+  
+  #If there are any entries with FDR above the desired threshold and Limited==TRUE, it indicates that npts should be increased in the emptyDrops call.
+  print(table(Limited=e.out$Limited, Significant=e.out$is.cell))
+  totalLimited <- sum(e.out$Limited[e.out$Limited == T] & e.out$Significant == F)
+  if (totalLimited == 0){
+    return(e.out)
+  } else {
+    return(performEmptyDrops(seuratRawData, emptyDropNIters = emptyDropNIters * 2, fdrThreshold = fdrThreshold))
+  }
 }
 
 hasStepRun <- function(seuratObj, name) {
@@ -146,7 +159,7 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   }
   
   if (!hasStepRun(seuratObj, 'ScaleData')) {
-    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"))
+    seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"), display.progress = F)
     seuratObj <- markStepRun(seuratObj, 'ScaleData')
   }
   
@@ -328,7 +341,7 @@ removeCellCycle <- function(seuratObj) {
   )
   
   print("Regressing out S and G2M score ...")
-  seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = T)
+  seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = F)
   
   print("Running PCA with variable genes ...")
   seuratObj <- RunPCA(object = seuratObj, pc.genes = VariableFeatures(object = seuratObj), do.print = F)
@@ -507,10 +520,10 @@ AddModuleScore_SERIII <- function(
     )
     cluster.length <- length(x = genes.list)
   }
-  if (!all(LengthCheck(values = genes.list))) {
+  if (!all(Seurat:::LengthCheck(values = genes.list))) {
     warning(paste(
       'Could not find enough genes in the object from the following gene lists:',
-      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      paste(names(x = which(x = ! Seurat:::LengthCheck(values = genes.list)))),
       'Attempting to match case...'
     ))
     genes.list <- lapply(
@@ -518,10 +531,10 @@ AddModuleScore_SERIII <- function(
       FUN = CaseMatch, match = rownames(x = object@data)
     )
   }
-  if (!all(LengthCheck(values = genes.list))) {
+  if (!all(Seurat:::LengthCheck(values = genes.list))) {
     stop(paste(
       'The following gene lists do not have enough genes present in the object:',
-      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      paste(names(x = which(x = ! Seurat:::LengthCheck(values = genes.list)))),
       'exiting...'
     ))
   }

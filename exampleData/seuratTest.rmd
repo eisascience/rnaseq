@@ -47,7 +47,7 @@ seuratObjs <- list()
 
 for (datasetName in names(data)) {
   print(paste0('Loading dataset: ', datasetName))
-  seuratObjs[datasetName] <- readAndFilter10xData(paste0(data[[datasetName]]), datasetName)
+  seuratObjs[datasetName] <- readAndFilter10xData(data[[datasetName]], datasetName)
 
   print(seuratObjs[datasetName])
 }
