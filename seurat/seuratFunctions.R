@@ -193,8 +193,8 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   print(VizDimLoadings(object = seuratObj, dims = 1:2))
   print(DimPlot(object = seuratObj))
   
-  print(DimHeatmap(object = seuratObj, dims = 1, cells = 500, balanced = TRUE))
-  print(DimHeatmap(object = seuratObj, dims = 1:20, cells = 500, balanced = TRUE))
+  print(DimHeatmap(object = seuratObj, dims = 1, cells = 500, balanced = TRUE, fast = F) + NoLegend())
+  print(DimHeatmap(object = seuratObj, dims = 1:20, cells = 500, balanced = TRUE, fast = F) + NoLegend())
   
   print(JackStrawPlot(object = seuratObj, dims = 1:20))
   print(ElbowPlot(object = seuratObj))
