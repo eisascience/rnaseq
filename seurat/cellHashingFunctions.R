@@ -32,12 +32,13 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
     print(paste0('Final HTOs: ', nrow(barcodeData)))
   }
   
+  barcodeMatrix <- as.matrix(barcodeData)
   rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
     sum(x > 0)
-  }))
+  }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)))
   
   print('Total cells above row min threshold:')
-  print(kable(rowSummary, caption = 'HTO Summary', row.names = T))
+  print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
   
   #rowMax
   toDrop <- rowSummary$max < minRowMax
@@ -84,7 +85,8 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
   } else {
     rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
       sum(x > 0)
-    }))
+    }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)))
+    
     print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
   }
   
