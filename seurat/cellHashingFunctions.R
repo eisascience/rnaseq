@@ -10,7 +10,7 @@ library(KernSmooth)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
-processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRowMax = 40, minCellsAboveThreshold = 25) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRowMax = 40, minCellsAboveThreshold = 25) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
@@ -22,7 +22,7 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
     barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
     print(paste0('Final cell barcodes: ', ncol(barcodeData)))
   }
-
+  
   #rowsum
   toDrop <- sum(rowSums(barcodeData) < minRowSum)
   if (toDrop > 0){
@@ -37,7 +37,7 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
   }))
   
   print('Total cells above row min threshold:')
-  print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
+  print(kable(rowSummary, caption = 'HTO Summary', row.names = T))
   
   #rowMax
   toDrop <- rowSummary$max < minRowMax
@@ -54,10 +54,10 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
   countPerRow <- colSums(apply(barcodeMatrix, 1, function(x){
     as.integer(x > minRowMax)
   }))
-  names(countPerRow) <- c('TotalCellsAboveThreshold')
+  names(countPerRow) <- rownames(barcodeMatrix)
   
   print('Total Cells per HTO above theshold:')
-  print(kable(countPerRow))
+  print(kable(data.frame(CellsAboveThreshold = countPerRow), row.names = T))
   
   toDrop <- countPerRow < minCellsAboveThreshold
   if (sum(toDrop) > 0){
@@ -65,38 +65,18 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 1, minColSum = 1, minRo
     print(paste(rownames(barcodeData)[toDrop], collapse = ', '))
     barcodeData <- barcodeData[!toDrop,]
     print(paste0('Final HTOs: ', nrow(barcodeData)))
+    print(paste(rownames(barcodeData), collapse = ', '))
   }
   
   barcodeMatrix <- as.matrix(barcodeData)
   
-  #Find outliers with high counts per HTO:
-  #TODO: what is actually the best method here?
-  #q <- apply(barcodeMatrix, 1, function(x){
-  #  quantile(x, probs = c(0.99),  na.rm = TRUE)
-  #}) 
-  
-  out <- apply(barcodeMatrix, 1, function(x){
-    boxplot.stats(x[x > 0], coef = 20)$out
-  })
-
-  # print('Removing Outliers:')  
-  # toDrop <- c()
-  # for(name in names(out)){
-  #   #limit to high-read outliers:
-  #   rMean <- mean(barcodeMatrix[name,])
-  #   vals <- out[[name]]
-  #   vals <- vals[vals > rMean]
-  #   
-  #   print(paste0(name, ' Outliers: ', length(vals)))
-  #   print(paste0('Non-zero values: ', sum(barcodeMatrix[name,] > 0)))
-  #   toDrop <- c(toDrop, names(vals))
-  # }
-  # 
-  # toDrop <- unique(toDrop)
-  # if (length(toDrop) > 0) {
-  #   print(paste0('Dropping outliers, total: ', length(toDrop)))
-  #   barcodeData <- barcodeData[!(names(barcodeData) %in% toDrop)]
-  # }
+  # repeat colsum, now that we potentially dropped rows:
+  toDrop <- sum(colSums(barcodeData) < minColSum)
+  if (toDrop > 0){
+    print(paste0('cells dropped due to low counts per cell after HTO filtering: ', toDrop))
+    barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
+    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
+  }
   
   #repeat summary:
   rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
@@ -311,8 +291,8 @@ performRoundOfMultiSeqCalling <- function(bar.table, roundNum) {
   )
   
   if (length(threshold1$extrema) == 0){
-    print("Unable to find extrema, aborting")
-    return(NA)
+    print("Unable to find extrema, attempting to default to 0.9")
+    threshold1$extrema <- c(0.15)
   }
   
   ## Finalize round 1 classifications, remove negative cells
