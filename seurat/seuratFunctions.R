@@ -456,7 +456,7 @@ CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident
   )
   cc.columns <- grep(pattern = enrich.name, x = colnames(x = object@meta.data))
   cc.scores <- object@meta.data[, cc.columns]
-  rm(object)
+  
   gc(verbose = FALSE)
   assignments <- apply(
     X = cc.scores,
