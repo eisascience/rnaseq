@@ -369,7 +369,7 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
   if (!hasStepRun(seuratObj, 'FindClusters')) {
     for (resolution in c(0.2, 0.4, 0.8, 1.2, 0.6)){
       seuratObj <- FindClusters(object = seuratObj, resolution = resolution)
-      seuratObj[[paste0("ClusterNames_", resolution)]] <- Idents(object = seuratObj)
+      seuratObj[[paste0("ClusterNames_", resolution)]] <- Idents(object = seuratObj, verbose = F)
       seuratObj <- markStepRun(seuratObj, 'FindClusters', saveFile)
     }
   }
@@ -608,7 +608,7 @@ findSeuratElbow <- function(seuratObj, ndims = 25, reduction = "pca", print.plot
   #TODO: what if this cant infer the elbow?  I think it will return a data.frame.
   #1 sd = 1.3
   #the findElbow should not fail, internally if it does it should return 2. But for whatever reason unpredicted it fails, this will capture it.
-  elbowX <- try(findElbow(data.use[1:ndims], plot = F, returnIndex = TRUE, ignore.concavity=F, min.y = 1.3))
+  elbowX <- try(findElbow(data.use[1:ndims], plot = T, ignore.concavity = F, min.y = 1.3))
   if (class(elbowX)=="try-error" || elbowX[1]==2) {
     if (is.null(ndims)){
       elbowX = 2
