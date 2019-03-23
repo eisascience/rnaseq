@@ -13,7 +13,7 @@ barcodeFile <- 'cellHashing/247-1-hashTagCounts.txt'
 #barcodeFile <- 'cellHashing/253-1-citeSeqCounts.txt'
 
 #fails both callers.  probably many negative cells
-barcodeFile <- 'cellHashing/260-3-HTO__cellHashingRawCounts.txt'
+barcodeFile <- 'cellHashing/260-4-HTO_cellHashingRawCounts.txt'
 finalCallFile <- 'finalCalls.txt'
 
 ```
