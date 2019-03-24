@@ -376,7 +376,9 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
   
   if (!hasStepRun(seuratObj, 'RunTSNE')) {
     #See: https://github.com/satijalab/seurat/issues/167
-    seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE)
+    #TODO: guess perplexity
+    perplexity <- 30
+    seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE, perplexity = perplexity)
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
 

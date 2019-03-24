@@ -11,19 +11,13 @@ library(KernSmooth)
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
 #TODO: can we make these thresholds adaptive based on our data?
-processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRowMax = 40, minMeanNonZeroCount = 5) {
+processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRowMax = 40, minColMax = 5, minMeanNonZeroCount = 5) {
   barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
   barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
   print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
   
-  #colsum
-  toDrop <- sum(colSums(barcodeData) < minColSum)
-  if (toDrop > 0){
-    print(paste0('cells dropped due to low counts per cell: ', toDrop))
-    barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
-    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
-  }
-  
+  barcodeData <- doCellFiltering(barcodeData, minColSum, minColMax)
+
   #rowsum
   toDrop <- sum(rowSums(barcodeData) < minRowSum)
   if (toDrop > 0){
@@ -34,7 +28,7 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
   }
   
   #summarize
-  rowSummary <- generateSummary(barcodeData)
+  rowSummary <- generateByRowSummary(barcodeData)
   print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
   
   #Drop HTOs with zero strong cells:
@@ -46,10 +40,10 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
     print(paste0('HTOs after filter: ', nrow(barcodeData)))
   }
   
+  #Now filter HTO by mean count among non-zero cells:
   barcodeMatrix <- as.matrix(barcodeData)
-  
   meanNonZero <- (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix))
-  print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero)))
+  print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero), row.names = F))
 
   toDrop <- meanNonZero < minMeanNonZeroCount
   if (sum(toDrop) > 0){
@@ -60,38 +54,23 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
     print(paste(rownames(barcodeData), collapse = ', '))
   }
   
-  barcodeMatrix <- as.matrix(barcodeData)
-  
-  # repeat colsum, now that we potentially dropped rows:
-  toDrop <- sum(colSums(barcodeData) < minColSum)
-  if (toDrop > 0){
-    print(paste0('cells dropped due to low counts per cell after HTO filtering: ', toDrop))
-    barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
-    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
-  }
+  # repeat colsum filter.  because we potentially dropped rows, some cells might be filtered out:
+  barcodeData <- doCellFiltering(barcodeData, minColSum, minColMax)
   
   #repeat summary:
   if (nrow(barcodeData) == 0) {
     print('No HTOs remaining')
   } else {
-    barcodeMatrix <- as.matrix(barcodeData)
-    rowSummary <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
-      sum(x > 0)
-    }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
-      sum(x > 1)  
-    }), mean_gt1 = apply(barcodeMatrix, 1, function(x){
-      mean(sapply(x, function(y){if (y > 1) y else NA}), na.rm = T)  
-    }))
-    
+    rowSummary <- generateByRowSummary(barcodeData)
     print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
   }
   
   return(barcodeData)  
 }
 
-generateSummary <- function(barcodeData) {
+generateByRowSummary <- function(barcodeData) {
   barcodeMatrix <- as.matrix(barcodeData)
-  data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+  df <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
     sum(x > 0)
   }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
     sum(x > 1)  
@@ -101,6 +80,29 @@ generateSummary <- function(barcodeData) {
   
   return(df)
 }
+
+doCellFiltering <- function(barcodeData, minColSum, minColMax){
+  #colsum
+  toDrop <- sum(colSums(barcodeData) < minColSum)
+  if (toDrop > 0){
+    print(paste0('cells dropped due to low total counts per column: ', toDrop))
+    barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
+    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
+  }
+  
+  #colmax
+  barcodeMatrix <- as.matrix(barcodeData)
+  cm <- apply(barcodeMatrix, 2, max)
+  toDrop <- sum(cm < minColMax)
+  if (toDrop > 0){
+    print(paste0('cells dropped due to low max counts per column: ', toDrop))
+    barcodeData <- barcodeData[,(cm >= minColMax)]
+    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
+  }
+  
+  return(barcodeData)
+}
+
 generateQcPlots <- function(barcodeData){
   print('Generating QC Plots')
   
