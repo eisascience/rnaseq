@@ -375,9 +375,18 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
   }
   
   if (!hasStepRun(seuratObj, 'RunTSNE')) {
-    #See: https://github.com/satijalab/seurat/issues/167
-    #TODO: guess perplexity
+    # To avoid Rtsne 'perplexity is too large for the number of samples' error.
+    # See check here: https://github.com/jkrijthe/Rtsne/blob/ebed20f612712987fd160386132c17289169b4d8/R/utils.R
+    # See also: https://github.com/satijalab/seurat/issues/167
+    # Infer the max allowable based on their formula
     perplexity <- 30
+    if (ncol(seuratObj) - 1 < 3 * perplexity) { 
+      print(paste0('Perplexity is too large for the number of samples: ', ncol(seuratObj)))
+      perplexityNew <- floor((ncol(seuratObj) - 1) / 3)
+      print(paste0('lowering from ', perplexity, ' to: ', perplexityNew))
+      perplexity <- perplexityNew
+    }
+    
     seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE, perplexity = perplexity)
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }

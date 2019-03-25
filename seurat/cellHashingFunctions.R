@@ -452,20 +452,6 @@ printFinalSummary <- function(dt, barcodeData){
   bc$CellBarcode <- rownames(bc)
   merged <- merge(merged, bc, by = c('CellBarcode'), all.x = T, all.y = F)
  
-  print(ggplot(merged, aes(x = HTO)) +
-          geom_histogram(stat = 'count') +
-          xlab('HTO') +
-          ylab('Count') +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  )
-  
-  print(ggplot(merged, aes(x = HTO_Classification)) +
-          geom_histogram(stat = 'count') +
-          xlab('Classification') +
-          ylab('Count') +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  )
-
   t <- table(SeuratCall = merged$Seurat, MultiSeqCall = merged$MultiSeq)
   
   colnames(t)[colnames(t) == T] <- c('MultiSeq Call')
@@ -475,6 +461,26 @@ printFinalSummary <- function(dt, barcodeData){
   rownames(t)[rownames(t) == F] <- c('Seurat No Call')
   
   print(kable(t))
+  
+  print(ggplot(merged, aes(x = HTO)) +
+          geom_histogram(stat = 'count') +
+          xlab('HTO') +
+          ylab('Count') +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
+  
+  print(kable(table(Classification = merged$HTO)))
+  
+  print(ggplot(merged, aes(x = HTO_Classification)) +
+          geom_histogram(stat = 'count') +
+          xlab('Classification') +
+          ylab('Count') +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
+  
+  print(kable(table(Classification = merged$HTO_Classification)))
+  
+    
   
   return(merged)
 }

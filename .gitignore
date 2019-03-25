@@ -4,3 +4,4 @@ exampleData/finalCalls.txt
 exampleData/10xCounts/*
 exampleData/savedSeurat.rds
 .Rhistory
+exampleData/outs*

@@ -2,19 +2,16 @@
 
 source('../seurat/cellHashingFunctions.R')
 
-#Relatively good input.  Several outlier cells with extremely high counts.
-barcodeFile <- 'cellHashing/247-1-hashTagCounts.txt'
+#expect these to be defined by caller:
+if (!exists('barcodeFile')){
+  stop('Must define the filepath of the barcodeFile')
+}
 
-#Extremely high doublets
-#barcodeFile <- 'cellHashing/267-1-citeSeqCounts.txt'
+if (!exists('finalCallFile')){
+  stop('Must define the filepath of the finalCallFile')
+}
 
-#barcodeFile <- 'cellHashing/267-2-citeSeqCounts.txt'
-
-#barcodeFile <- 'cellHashing/253-1-citeSeqCounts.txt'
-
-#fails both callers.  probably many negative cells
-barcodeFile <- 'cellHashing/260-4-HTO_cellHashingRawCounts.txt'
-finalCallFile <- 'finalCalls.txt'
+print(barcodeFile)
 
 ```
 
