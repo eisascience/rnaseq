@@ -755,11 +755,12 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
   use <- 2:(nrow(DF)-1)
   refpts <- m*DF$x[use] + b
   if (all(refpts > DF$y[use]) | all(refpts < DF$y[use])) concave <- TRUE
+  if (ignore.concavity) concave <- TRUE
+  
   if (!concave) {
     print("Your curve doesn't appear to be concave")
   }
   
-  if (ignore.concavity) concave <- TRUE
   
   # Calculate the orthogonal distances
   if (is.na(min.x)){
