@@ -21,6 +21,10 @@ print(barcodeFile)
 
 barcodeData <- processCiteSeqCount(barcodeFile)
 if (nrow(barcodeData) == 0) {
+  stop('No passing HTOs')
+}
+
+if (ncol(barcodeData) == 0) {
   stop('No passing cells')
 }
 

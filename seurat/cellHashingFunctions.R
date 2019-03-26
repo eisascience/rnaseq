@@ -7,6 +7,7 @@ library(reshape2)
 library(ggplot2)
 library(knitr)
 library(KernSmooth)
+library(naturalsort)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
@@ -70,13 +71,15 @@ processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRo
 
 generateByRowSummary <- function(barcodeData) {
   barcodeMatrix <- as.matrix(barcodeData)
-  df <- data.frame(HTO = rownames(barcodeData), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+  df <- data.frame(HTO = naturalfactor(rownames(barcodeData)), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
     sum(x > 0)
   }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
     sum(x > 1)  
   }), mean_gt1 = apply(barcodeMatrix, 1, function(x){
     mean(sapply(x, function(y){if (y > 1) y else NA}), na.rm = T)  
   }))
+  
+  df <- df[order(df$HTO),]
   
   return(df)
 }
@@ -112,7 +115,7 @@ generateQcPlots <- function(barcodeData){
   countAbove <-unlist(lapply(countsPerCell, function(x){
     sum(countsPerCell >= x)
   }))
-  plot(log(countAbove), log(countsPerCell), pch=20, ylab = "log(Reads/Cell)", xlab = "log(Total Cells)")  
+  plot(log10(countAbove), log10(countsPerCell), pch=20, ylab = "log10(Reads/Cell)", xlab = "log10(Total Cells)")  
   
   topBarcodes <- sort(tail(countsPerCell, n = 20), decreasing = T)
   
@@ -318,7 +321,7 @@ performRoundOfMultiSeqCalling <- function(bar.table, roundNum) {
   neg.cells <- names(round1.calls)[which(round1.calls == "Negative")]
   print(paste0('Negative cells dropped: ', length(neg.cells)))
   if (length(neg.cells) > 0) {
-    bar.table <- bar.table[-which(rownames(bar.table) %in% neg.cells), ]
+    bar.table <- bar.table[-which(rownames(bar.table) %in% neg.cells), , drop = F]
     print(paste0('Remaining: ', nrow(bar.table)))
   }
   
@@ -452,6 +455,12 @@ printFinalSummary <- function(dt, barcodeData){
   bc$CellBarcode <- rownames(bc)
   merged <- merge(merged, bc, by = c('CellBarcode'), all.x = T, all.y = F)
  
+  #summarize reads by type:
+  barcodeMatrix <- as.matrix(barcodeData)
+  cs <- colSums(barcodeMatrix)
+  cs <- cs[merged$CellBarcode]
+  merged$TotalCounts <- cs
+
   t <- table(SeuratCall = merged$Seurat, MultiSeqCall = merged$MultiSeq)
   
   colnames(t)[colnames(t) == T] <- c('MultiSeq Call')
@@ -463,7 +472,7 @@ printFinalSummary <- function(dt, barcodeData){
   print(kable(t))
   
   print(ggplot(merged, aes(x = HTO)) +
-          geom_histogram(stat = 'count') +
+          geom_bar(stat = 'count') +
           xlab('HTO') +
           ylab('Count') +
           theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -472,15 +481,22 @@ printFinalSummary <- function(dt, barcodeData){
   print(kable(table(Classification = merged$HTO)))
   
   print(ggplot(merged, aes(x = HTO_Classification)) +
-          geom_histogram(stat = 'count') +
+          geom_bar(stat = 'count') +
           xlab('Classification') +
           ylab('Count') +
           theme(axis.text.x = element_text(angle = 90, hjust = 1))
   )
   
   print(kable(table(Classification = merged$HTO_Classification)))
-  
-    
+
+  print(ggplot(merged, aes(x = HTO_Classification, y = TotalCounts)) +
+    geom_boxplot()  +
+    xlab('HTO Classification') +
+    ylab('Counts Per Cell (log10)') +
+    ggtitle('Counts By Call Type') +
+    scale_y_continuous(trans='log10') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
   
   return(merged)
 }

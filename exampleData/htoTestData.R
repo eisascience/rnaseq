@@ -1,16 +1,20 @@
 
 datasets <- list(
-  '267-1' = 'cellHashing/267-1-citeSeqCounts.txt',
-  '267-2' = 'cellHashing/267-2-citeSeqCounts.txt',
-  '253-1' = 'cellHashing/253-1-citeSeqCounts.txt',
-  '260-4' = 'cellHashing/260-4-HTO_cellHashingRawCounts.txt'
+  #'267-1' = 'cellHashing/267-1-citeSeqCounts.txt',
+  #'267-2' = 'cellHashing/267-2-citeSeqCounts.txt',
+  #'253-1' = 'cellHashing/253-1-citeSeqCounts.txt',
+  #'260-4' = 'cellHashing/260-4-HTO_cellHashingRawCounts.txt'
+  '278-1' = 'cellHashing/278-1-HTO_cellHashingRawCounts.txt',
+  '282-1' = 'cellHashing/282-1-HTO_cellHashingRawCounts.txt'
 )
 
 expectedHtos <- list(
   '267-1' = c(1:4),
   '267-2' = c(1:4),
   '253-1' = c(1:7),
-  '260-4' = c(5:8)
+  '260-4' = c(5:8),
+  '278-1' = c(6:9),
+  '282-1' = c(1:3, 8, 10, 12)
 )
 
 outDir <- './outs'
