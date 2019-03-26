@@ -443,7 +443,10 @@ reclassifyByMultiSeq <- function(bar.table.full, final.calls){
   final.calls.rescued[rownames(reclass.cells)[rescue.ind]] <- reclass.cells$Reclassification[rescue.ind]
 }
 
-processEnsemblHtoCalls <- function(mc, sc, barcodeData, outFile = 'combinedHtoCalls.txt', allCallsOutFile = NA) {
+processEnsemblHtoCalls <- function(mc, sc, barcodeData, 
+                                   outFile = 'combinedHtoCalls.txt', 
+                                   allCallsOutFile = NA) {
+  
   if (all(is.na(sc)) && all(is.na(mc))){
     print('MULTI-seq and Seurat failed to produce calls, aborting')
     return()

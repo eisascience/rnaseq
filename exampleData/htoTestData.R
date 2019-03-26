@@ -30,7 +30,7 @@ for (dataset in names(datasets)) {
   print(barcodeFile)
   finalCallFile <- paste0('./outs/', dataset, '.calls.txt')
   outputFile <- paste0('../outs/', dataset, '.html')
-  barcodeFile <- paste0('./exampleData/', barcodeFile)
+  barcodeFile <- paste0('../exampleData/', barcodeFile)
   
   
   rmarkdown::render('./exampleData/htoPipeline.rmd', 
