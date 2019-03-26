@@ -17,18 +17,25 @@ expectedHtos <- list(
   '282-1' = c(1:3, 8, 10, 12)
 )
 
+getwd()
 outDir <- './outs'
-if (!file.exists(outDir)){
+if (!dir.exists(outDir)){
   dir.create(outDir)
 }
 for (dataset in names(datasets)) {
+  # dataset = names(datasets)[1]
   print(paste0('Processing dataset: ', dataset))
   
   barcodeFile <- datasets[[dataset]]
   print(barcodeFile)
   finalCallFile <- paste0('./outs/', dataset, '.calls.txt')
-  outputFile <- paste0('./outs/', dataset, '.html')
-  rmarkdown::render('htoPipeline.rmd', output_file = outputFile, output_format = 'html_document')
+  outputFile <- paste0('../outs/', dataset, '.html')
+  barcodeFile <- paste0('../exampleData/', barcodeFile)
+  
+  
+  rmarkdown::render('./exampleData/htoPipeline.rmd', 
+                    output_file = outputFile, 
+                    output_format = 'html_document')
   
   print('Expected HTOs')
   print(paste0('HTO-', expectedHtos[[dataset]]))

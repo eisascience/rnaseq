@@ -1,3 +1,4 @@
+
 ```{r}
 
 source('../seurat/cellHashingFunctions.R')
@@ -19,7 +20,12 @@ print(barcodeFile)
 
 ```{r QC}
 
-barcodeData <- processCiteSeqCount(barcodeFile)
+
+
+barcodeData <- processCiteSeqCount(bFile=barcodeFile)
+
+dim(barcodeData)
+
 if (nrow(barcodeData) == 0) {
   stop('No passing HTOs')
 }
@@ -57,8 +63,8 @@ mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
 
 
 ```{r ProcessCalls}
-
-dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile)
+#the rmd resides in ./exampleData, so 
+dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = paste0(".", finalCallFile))
 
 
 ```
