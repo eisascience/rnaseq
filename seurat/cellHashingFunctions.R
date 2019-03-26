@@ -11,62 +11,92 @@ library(naturalsort)
 
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 
+source("https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFunctions.R")
+
+
+
 #TODO: can we make these thresholds adaptive based on our data?
-processCiteSeqCount <- function(barcodeFile, minRowSum = 5, minColSum = 5, minRowMax = 40, minColMax = 5, minMeanNonZeroCount = 5) {
-  barcodeData <- read.table(barcodeFile, sep = ',', header = T, row.names = 1)
-  barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% c('no_match', 'total_reads'))),]
-  print(paste0('Initial barcodes in HTO data: ', ncol(barcodeData)))
-  
-  barcodeData <- doCellFiltering(barcodeData, minColSum, minColMax)
-
-  #rowsum
-  toDrop <- sum(rowSums(barcodeData) < minRowSum)
-  if (toDrop > 0){
-    print(paste0('HTOs dropped due to low total counts: ', toDrop))
-    print(paste(rownames(barcodeData)[which(rowSums(barcodeData) < minRowSum)], collapse = ', '))
-    barcodeData <- barcodeData[which(rowSums(barcodeData) >= minRowSum),]
-    print(paste0('HTOs after filter: ', nrow(barcodeData)))
-  }
-  
-  #summarize
-  rowSummary <- generateByRowSummary(barcodeData)
-  print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
-  
-  #Drop HTOs with zero strong cells:
-  toDrop <- rowSummary$max < minRowMax
-  if (sum(toDrop) > 0){
-    print(paste0('HTOs dropped due to low max counts: ', sum(toDrop)))
-    print(paste(rownames(barcodeData)[toDrop], collapse = ', '))
-    barcodeData <- barcodeData[!toDrop,]
-    print(paste0('HTOs after filter: ', nrow(barcodeData)))
-  }
-  
-  #Now filter HTO by mean count among non-zero cells:
-  barcodeMatrix <- as.matrix(barcodeData)
-  meanNonZero <- (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix))
-  print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero), row.names = F))
-
-  toDrop <- meanNonZero < minMeanNonZeroCount
-  if (sum(toDrop) > 0){
-    print(paste0('HTOs dropped due to insufficient mean non-zero count: ', sum(toDrop)))
-    print(paste(rownames(barcodeData)[toDrop], collapse = ', '))
-    barcodeData <- barcodeData[!toDrop,]
-    print(paste0('HTOs after filter: ', nrow(barcodeData)))
-    print(paste(rownames(barcodeData), collapse = ', '))
-  }
-  
-  # repeat colsum filter.  because we potentially dropped rows, some cells might be filtered out:
-  barcodeData <- doCellFiltering(barcodeData, minColSum, minColMax)
-  
-  #repeat summary:
-  if (nrow(barcodeData) == 0) {
-    print('No HTOs remaining')
+processCiteSeqCount <- function(bFile=NA, minRowSum = 5, 
+                                minColSum = 5, minRowMax = 40, 
+                                minColMax = 5, minMeanNonZeroCount = 5) {
+  if(is.na(bFile)){
+    print("No file set: change bFile")
   } else {
-    rowSummary <- generateByRowSummary(barcodeData)
-    print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
+    
+    #its not good practice to have variable names 
+    #inside the function that matches other scopes
+    # bFile = "./exampleData/cellHashing/278-1-HTO_cellHashingRawCounts.txt"
+    
+    bData <- read.table(bFile, sep = ',', header = T, row.names = 1)
+    bData <- bData[which(!(rownames(bData) %in% c('no_match', 'total_reads'))),]
+    print(paste0('Initial barcodes in HTO data: ', ncol(bData)))
+    
+    bData <- doCellFiltering(bData, minColSum, minColMax, useElbowMinColMax=T)
+    
+    #rowsum
+    
+    #quantile to set minRowSum ?
+    boxplot(log2(rowSums(bData)), ylim=range(0:20))
+    abline(h=log2(minRowSum))
+    
+    toDrop <- sum(rowSums(bData) < minRowSum)
+    
+    if (toDrop > 0){
+      print(paste0('HTOs dropped due to low total counts: ', toDrop))
+      print(paste(rownames(bData)[which(rowSums(bData) < minRowSum)], collapse = ', '))
+      bData <- bData[which(rowSums(bData) >= minRowSum),]
+      print(paste0('HTOs after filter: ', nrow(bData)))
+    }
+    
+    #summarize
+    rowSummary <- generateByRowSummary(bData)
+    print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
+    
+    
+    boxplot(log2(rowSummary$max), ylim=range(0:20))
+    abline(h=log2(minRowMax))
+    
+    #Drop HTOs with zero strong cells:
+    toDrop <- rowSummary$max < minRowMax
+    if (sum(toDrop) > 0){
+      print(paste0('HTOs dropped due to low max counts: ', sum(toDrop)))
+      print(paste(rownames(bData)[toDrop], collapse = ', '))
+      bData <- bData[!toDrop,]
+      print(paste0('HTOs after filter: ', nrow(bData)))
+    }
+    
+    #Now filter HTO by mean count among non-zero cells:
+    barcodeMatrix <- as.matrix(bData)
+    meanNonZero <- (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix))
+    print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero), row.names = F))
+    
+    toDrop <- meanNonZero < minMeanNonZeroCount
+    
+    if (sum(toDrop) > 0){
+      print(paste0('HTOs dropped due to insufficient mean non-zero count: ', sum(toDrop)))
+      print(paste(rownames(bData)[toDrop], collapse = ', '))
+      bData <- bData[!toDrop,]
+      print(paste0('HTOs after filter: ', nrow(bData)))
+      print(paste(rownames(bData), collapse = ', '))
+    }
+    
+    # repeat colsum filter.  because we potentially dropped rows, 
+    #some cells might be filtered out:
+    # OK but do the paramters need to change?
+    bData <- doCellFiltering(bData, minColSum, minColMax, useElbowMinColMax=T)
+    
+    #repeat summary:
+    if (nrow(bData) == 0) {
+      print('No HTOs remaining')
+    } else {
+      rowSummary <- generateByRowSummary(bData)
+      print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
+    }
+    
+    return(bData)  
+    
   }
   
-  return(barcodeData)  
 }
 
 generateByRowSummary <- function(barcodeData) {
@@ -84,26 +114,87 @@ generateByRowSummary <- function(barcodeData) {
   return(df)
 }
 
-doCellFiltering <- function(barcodeData, minColSum, minColMax){
-  #colsum
-  toDrop <- sum(colSums(barcodeData) < minColSum)
+doCellFiltering <- function(bData, minColSum, minColMax, 
+                            useQuantMinColMax = F, useElbowMinColMax=F, plotFigs=F){
+  
+  if(useQuantMinColMax) {
+    #this method requires one to set the quantile of outliers desired.
+    #in dev, even 0.05 the minColSum is much higher than Ben's default of 5
+    if(plotFigs){
+      boxplot(log2(colSums(bData) + 1))
+      abline(h=quantile(log2(colSums(bData)), c(minColMaxQuant)), col="red")
+      abline(h=quantile(log2(colSums(bData)), c(1-minColMaxQuant)), col="red")
+    }
+    
+    
+    minColMaxQuant=0.05
+    minColSum <- exp(quantile(log2(colSums(bData)), c(minColMaxQuant)))
+    
+  }
+  
+  if(useElbowMinColMax){
+    
+    if(ncol(bData)>30){
+      
+      tempDF.plot <- as.data.frame(cbind(x=1:30,
+                                         y = unlist(lapply(1:30, function(xN){
+                                           sum(colSums(bData) < xN)
+                                         })))); NoOfSteps = 30
+    } else {
+      #if it is less than 3 columns wide, then just choose 1/2 so not to break the pipeline
+      tempDF.plot <- as.data.frame(cbind(x=1:round(ncol(bData)/2),
+                                         y = unlist(lapply(1:round(ncol(bData)/2), function(xN){
+                                           sum(colSums(bData) < xN)
+                                         })))); NoOfSteps = round(ncol(bData)/2)
+    }
+    
+    #plot(tempDF.plot)
+    #this min.y needs to be set at a value that is globally good, 
+    #5000 is chosen during dev on the subset of data available
+    
+    tempElbow <- findElbow(y=(tempDF.plot$y), plot=F, min.y = 5000, ignore.concavity = T)
+    
+    #since the findElbow is ordering y decendingly, and we did 1:30
+    tempElbow <- NoOfSteps - tempElbow
+    tempDF.plot[tempElbow, ]
+    if(plotFigs){
+      plot(tempDF.plot)
+      abline(v=tempElbow, col="red")
+    }
+    minColSum <- tempElbow
+    remove(tempElbow, tempDF.plot, NoOfSteps)
+  }
+    
+    
+
+    
+    #colsum
+  toDrop <- sum(colSums(bData) < minColSum)
+  
   if (toDrop > 0){
     print(paste0('cells dropped due to low total counts per column: ', toDrop))
-    barcodeData <- barcodeData[,which(colSums(barcodeData) >= minColSum)]
-    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
+    bData <- bData[,which(colSums(bData) >= minColSum)]
+    print(paste0('Final cell barcodes: ', ncol(bData)))
   }
   
   #colmax
-  barcodeMatrix <- as.matrix(barcodeData)
+  barcodeMatrix <- as.matrix(bData)
   cm <- apply(barcodeMatrix, 2, max)
+  
+  # Place holder, for doing the same as above to identify minColMax quantitatively,..
+  # for now, here is a boxplot
+  boxplot(log(cm))
+  
+  
+  
   toDrop <- sum(cm < minColMax)
   if (toDrop > 0){
     print(paste0('cells dropped due to low max counts per column: ', toDrop))
-    barcodeData <- barcodeData[,(cm >= minColMax)]
-    print(paste0('Final cell barcodes: ', ncol(barcodeData)))
+    bData <- bData[,(cm >= minColMax)]
+    print(paste0('Final cell barcodes: ', ncol(bData)))
   }
   
-  return(barcodeData)
+  return(bData)
 }
 
 generateQcPlots <- function(barcodeData){

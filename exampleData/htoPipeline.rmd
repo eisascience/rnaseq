@@ -1,3 +1,4 @@
+
 ```{r}
 
 source('../seurat/cellHashingFunctions.R')
@@ -19,7 +20,10 @@ print(barcodeFile)
 
 ```{r QC}
 
-barcodeData <- processCiteSeqCount(barcodeFile)
+dim(barcodeData)
+
+barcodeData <- processCiteSeqCount(bFile=barcodeFile)
+
 if (nrow(barcodeData) == 0) {
   stop('No passing HTOs')
 }
