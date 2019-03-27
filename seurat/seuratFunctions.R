@@ -68,6 +68,10 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, empty
     print('Probabilities all -Inf, unable to plot')  
   }
   
+  if (nrow(toPlot) != rnow(e.out)) {
+    print(paste0('Total rows with non-finite probabilities: ', (rnow(e.out) - nrow(toPlot))))
+  }
+  
   passingCells <- rownames(e.out)[e.out$is.cell]
   
   return(seuratRawData[,passingCells])

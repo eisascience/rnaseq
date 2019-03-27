@@ -24,8 +24,6 @@ print(barcodeFile)
 
 barcodeData <- processCiteSeqCount(bFile=barcodeFile)
 
-dim(barcodeData)
-
 if (nrow(barcodeData) == 0) {
   stop('No passing HTOs')
 }
@@ -63,8 +61,8 @@ mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
 
 
 ```{r ProcessCalls}
-#the rmd resides in ./exampleData, so 
-dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = paste0(".", finalCallFile))
+
+dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile)
 
 
 ```
