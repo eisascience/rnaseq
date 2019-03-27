@@ -50,7 +50,8 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, empty
   br.out <- barcodeRanks(seuratRawData)
   
   # Making a plot.
-  plot(br.out$rank, br.out$total, log="xy", xlab="Rank", ylab="Total")
+  plot(br.out$rank, br.out$total+1, log="xy", xlab="Rank", ylab="Total")
+
   o <- order(br.out$rank)
   lines(br.out$rank[o], br.out$fitted[o], col="red")
   abline(h=br.out$knee, col="dodgerblue", lty=2)
