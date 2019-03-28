@@ -68,8 +68,8 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, empty
     print('Probabilities all -Inf, unable to plot')  
   }
   
-  if (nrow(toPlot) != rnow(e.out)) {
-    print(paste0('Total rows with non-finite probabilities: ', (rnow(e.out) - nrow(toPlot))))
+  if (nrow(toPlot) != nrow(e.out)) {
+    print(paste0('Total rows with non-finite probabilities: ', (nrow(e.out) - nrow(toPlot))))
   }
   
   passingCells <- rownames(e.out)[e.out$is.cell]
@@ -708,6 +708,8 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
     lineMagnitude <- function(x1, y1, x2, y2) sqrt((x2-x1)^2+(y2-y1)^2)
     ans <- NULL
     ix <- iy <- 0   # intersecting point
+    print(ix)
+    print(iy)
     lineMag <- lineMagnitude(x1, y1, x2, y2)
     if (any(lineMag < 0.00000001)) { # modified for vectorization by BAH
       #warning("short segment")
@@ -721,6 +723,7 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
       ## to an endpoint
       ix <- lineMagnitude(px, py, x1, y1)
       iy <- lineMagnitude(px, py, x2, y2)
+      #TODO: giving warning.  needs any() or all()??
       if (ix > iy)  ans <- iy
       else ans <- ix
     } else {
