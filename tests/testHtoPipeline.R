@@ -24,7 +24,7 @@ if (!dir.exists(outDir)){
 }
 
 #now adjust for relative location to RMD file:
-outDirRmd <- '../tests/' + outDir
+outDirRmd <- paste0('../tests/', outDir)
 
 outcomes <- data.frame(file = character(), expected = character(), matrixActual = character(), callActual = character(), diff = character())
 for (dataset in names(datasets)) {
