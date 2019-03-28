@@ -5,3 +5,4 @@ exampleData/10xCounts/*
 exampleData/savedSeurat.rds
 .Rhistory
 exampleData/outs*
+tests/outs/*

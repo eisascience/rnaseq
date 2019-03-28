@@ -17,24 +17,27 @@ expectations <- list(
   '282-1' = list(htos = c(1:3, 8, 10, 12), gexBarcodeFile = '')
 )
 
+#relative to ./tests (assumed to be current working dir)
 outDir <- './outs/'
 if (!dir.exists(outDir)){
   dir.create(outDir)
 }
 
+#now adjust for relative location to RMD file:
+outDirRmd <- '../tests/' + outDir
+
+outcomes <- data.frame(file = character(), expected = character(), matrixActual = character(), callActual = character(), diff = character())
 for (dataset in names(datasets)) {
   print(paste0('Processing dataset: ', dataset))
   
   barcodeFile <- datasets[[dataset]]
   print(barcodeFile)
-  finalCallFile <- paste0(outDir, dataset, '.calls.txt')
-  outputFile <- paste0(outDir, dataset, '.html')
+  finalCallFile <- paste0(outDirRmd, dataset, '.calls.txt')
+  outputFile <- paste0(outDirRmd, dataset, '.html')
   barcodeFile <- paste0('../exampleData/', barcodeFile)
   
-  
-  rmarkdown::render('../exampleData/htoPipeline.rmd', 
-                    output_file = outputFile, 
-                    output_format = 'html_document')
+  #Note: paths are relative to the RMD file
+  rmarkdown::render('../exampleData/htoPipeline.rmd', output_file = outputFile, output_format = 'html_document')
   
   datasetExpectations <- expectations[[dataset]]
   
@@ -42,14 +45,27 @@ for (dataset in names(datasets)) {
   expectedHtos <- sort(paste0('HTO-', datasetExpectations$htos))
   print(expectedHtos)
   
-  print('Actual HTOs')
+  print('Actual HTOs (barcode matrix)')
+  actualHtosMatrix <- sort(unname(simplifyHtoNames(rownames(barcodeData))))
+
+  print('Actual HTOs (final calls)')
   actualHtos <- as.character(unique(dt$HTO))
   actualHtos <- sort(actualHtos[!(actualHtos %in% c('Negative', 'Doublet'))])
   print(actualHtos)
   
-  if (!all(expectedHtos == actualHtos)) {
+  differing <- c(setdiff(expectedHtos, actualHtosMatrix), setdiff(actualHtosMatrix, expectedHtos))
+  if (length(differing) > 0 ) {
     print('HTO set did not match!')
+    print(differing)
   }
   
   print(paste0('Total cells after filter: ', ncol(barcodeData)))
+  
+  outcomes <- rbind(outcomes, data.frame(file = barcodeFile, 
+                                         expected = paste0(expectedHtos, collapse = ','), 
+                                         matrixActual = paste0(actualHtosMatrix, collapse = ','), 
+                                         callActual = paste0(actualHtos, collapse = ','),
+                                         diff = paste0(differing, collapse = ',')))
 }
+
+write.table(outcomes, file = 'testResults.txt', quote = F, sep = '\t', row.names = F)
