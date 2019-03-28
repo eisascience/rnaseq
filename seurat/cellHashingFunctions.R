@@ -43,56 +43,72 @@ processCiteSeqCount <- function(bFile=NA) {
 }
 
 doRowFiltering <- function(bData, minRowSum = 5, 
-                           minRowMax = 40, 
-                           minMeanNonZeroCount = 5){
-  rowSummary <- generateByRowSummary(bData)
-  
-  thresholdRowSum <- inferThresholds(rowSums(bData), dataLabel = 'Row Sums')
-  print(thresholdRowSum)
+                           minRowMax = 20, 
+                           minRowMean = 0.5,
+                           minMeanNonZeroCount = 2){
+
+  #thresholdRowSum <- inferThresholds(rowSums(bData), dataLabel = 'Row Sums')
+  #print(thresholdRowSum)
   #TODO: consider using this
   #minRowSum <- thresholdRowSum$ElbowThreshold
   
-  boxplot(log2(rowSums(bData)), ylim=range(0:20), main = "Row Sums (log2)")
-  abline(h=log2(minRowSum))
-
-  thresholdRowMax <- inferThresholds(rowSummary$max, dataLabel = 'Row Max')
-  print(thresholdRowMax)
+  #thresholdRowMax <- inferThresholds(rowSummary$max, dataLabel = 'Row Max')
+  #print(thresholdRowMax)
   #TODO: consider using this
   #minRowMax <- thresholdRowMax$ElbowThreshold
   
+  thresholdRowMean <- inferThresholds(rowMeans(bData), dataLabel = 'Row Mean')
+  print(thresholdRowMean)
+
   #rowsum
   toDrop <- sum(rowSums(bData) < minRowSum)
   if (toDrop > 0){
-    print(paste0('HTOs dropped due to low total counts: ', toDrop))
+    print(paste0('HTOs dropped due to low total counts (', minRowSum, '): ', toDrop))
     print(paste(rownames(bData)[which(rowSums(bData) < minRowSum)], collapse = ', '))
     bData <- bData[which(rowSums(bData) >= minRowSum),]
     print(paste0('HTOs after filter: ', nrow(bData)))
+    print(paste(rownames(bData), collapse = ', '))
   }
   
   #summarize
   rowSummary <- generateByRowSummary(bData)
   print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
   
-  boxplot(log2(rowSummary$max), ylim=range(0:20), main = "Row Max (log2)")
-  abline(h=log2(minRowMax))
+  #rowmean
+  toDrop <- sum(rowMeans(bData) < minRowMean)
+  if (toDrop > 0){
+    print(paste0('HTOs dropped due to low row means (', minRowMean, '): ', toDrop))
+    print(paste(rownames(bData)[which(rowMeans(bData) < minRowMean)], collapse = ', '))
+    bData <- bData[which(rowMeans(bData) >= minRowMean),]
+    print(paste0('HTOs after filter: ', nrow(bData)))
+    print(paste(rownames(bData), collapse = ', '))
+  }
+  
+  #summarize
+  rowSummary <- generateByRowSummary(bData)
+  print(kable(rowSummary, caption = 'HTO Summary', row.names = F))
   
   #Drop HTOs with zero strong cells:
-  toDrop <- rowSummary$max < minRowMax
+  barcodeMatrix <- as.matrix(bData)
+  rowMaxes <- apply(barcodeMatrix, 1, max)
+  toDrop <- rowMaxes < minRowMax
   if (sum(toDrop) > 0){
-    print(paste0('HTOs dropped due to low max counts: ', sum(toDrop)))
+    print(paste0('HTOs dropped due to low max counts (', minRowMax, '): ', sum(toDrop)))
     print(paste(rownames(bData)[toDrop], collapse = ', '))
     bData <- bData[!toDrop,]
     print(paste0('HTOs after filter: ', nrow(bData)))
+    print(paste(rownames(bData), collapse = ', '))
   }
   
   #Now filter HTO by mean count among non-zero cells:
   barcodeMatrix <- as.matrix(bData)
   meanNonZero <- (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix))
-  print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero), row.names = F))
-  
+  meanNonZeroRatio <- meanNonZero / rowMeans(barcodeMatrix)
+  print(kable(data.frame(HTO = rownames(barcodeMatrix), MeanCountOfNonZeroCells = meanNonZero, RatioOfMeanToNonZeroMean = meanNonZeroRatio), row.names = F))
+
   toDrop <- meanNonZero < minMeanNonZeroCount
   if (sum(toDrop) > 0){
-    print(paste0('HTOs dropped due to insufficient mean non-zero count: ', sum(toDrop)))
+    print(paste0('HTOs dropped due to insufficient mean non-zero count (', minMeanNonZeroCount, '): ', sum(toDrop)))
     print(paste(rownames(bData)[toDrop], collapse = ', '))
     bData <- bData[!toDrop,]
     print(paste0('HTOs after filter: ', nrow(bData)))
@@ -103,8 +119,13 @@ doRowFiltering <- function(bData, minRowSum = 5,
 }
 
 generateByRowSummary <- function(barcodeData) {
+  if (nrow(barcodeData) == 0) {
+    print('No rows in data, cannot generate summary')
+    return(data.frame(HTO = character()))
+  }
+  
   barcodeMatrix <- as.matrix(barcodeData)
-  df <- data.frame(HTO = naturalfactor(rownames(barcodeData)), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), nonzero = apply(barcodeData, 1, function(x){
+  df <- data.frame(HTO = naturalfactor(rownames(barcodeData)), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), logmean = log(apply(barcodeData, 1, mean) + 1), nonzero = apply(barcodeData, 1, function(x){
     sum(x > 0)
   }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
     sum(x > 1)  
@@ -152,20 +173,23 @@ inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, find
                                        })))); NoOfSteps = round(length(data)/2)
   }
   
-  tempElbow <- findElbow(y=(tempDF.plot$y), plot=F, min.y = findElbowMinY, ignore.concavity = T)
+  if (nrow(tempDF.plot) > 1) {
+    tempElbow <- findElbow(y=(tempDF.plot$y), plot=F, min.y = findElbowMinY, ignore.concavity = T)
 
-  #since the findElbow is ordering y decendingly, and we did 1:30
-  tempElbow <- NoOfSteps - tempElbow
-  if (plotFigs){
-    plot(tempDF.plot, main = paste0(dataLabel, " Threshold Based on Elbow"), xlab = dataLabel)
-    abline(v=tempElbow, col="red")
+    #since the findElbow is ordering y decendingly, and we did 1:30
+    tempElbow <- NoOfSteps - tempElbow
+    if (plotFigs){
+      plot(tempDF.plot, main = paste0(dataLabel, " Threshold Based on Elbow"), xlab = dataLabel)
+      abline(v=tempElbow, col="red")
+    }
+  
+    ret$ElbowThreshold <- tempElbow
+    print(paste0('Threshold inferred by elbow: ', ret$ElbowThreshold))
+  
+    remove(tempElbow, tempDF.plot, NoOfSteps)
+  } else {
+    print('Too few points, unable to infer by elbow')
   }
-  
-  ret$ElbowThreshold <- tempElbow
-  print(paste0('Threshold inferred by elbow: ', ret$ElbowThreshold))
-  
-  remove(tempElbow, tempDF.plot, NoOfSteps)
-  
   return(ret)
 }
 
@@ -176,7 +200,7 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   #colsum filter
   toDrop <- sum(colSums(bData) < minColSum)
   if (toDrop > 0){
-    print(paste0('cells dropped due to low total counts per column: ', toDrop))
+    print(paste0('cells dropped due to low total counts per column (', minColSum, '): ', toDrop))
     bData <- bData[,which(colSums(bData) >= minColSum)]
     print(paste0('Final cell barcodes: ', ncol(bData)))
   }
@@ -189,7 +213,7 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   
   toDrop <- sum(cm < minColMax)
   if (toDrop > 0){
-    print(paste0('cells dropped due to low max counts per column: ', toDrop))
+    print(paste0('cells dropped due to low max counts per column (', minColMax,'): ', toDrop))
     bData <- bData[,(cm >= minColMax)]
     print(paste0('Final cell barcodes: ', ncol(bData)))
   }
@@ -582,14 +606,7 @@ printFinalSummary <- function(dt, barcodeData){
   cs <- cs[merged$CellBarcode]
   merged$TotalCounts <- cs
 
-  htoNames <- sapply(as.character(merged$HTO), function(x){
-    x <- unlist(strsplit(x, '-'))
-    if (length(x) > 1) {
-      x <- x[-(length(x))]  
-    }
-    
-    paste0(x, collapse = "-")
-  })
+  htoNames <- simplifyHtoNames(as.character(merged$HTO))
   
   merged$HTO <- naturalfactor(as.character(htoNames))
   
@@ -633,6 +650,16 @@ printFinalSummary <- function(dt, barcodeData){
   return(merged)
 }
 
+simplifyHtoNames <- function(v) {
+  return(sapply(v, function(x){
+    x <- unlist(strsplit(x, '-'))
+    if (length(x) > 1) {
+      x <- x[-(length(x))]  
+    }
+    
+    paste0(x, collapse = "-")
+  }))
+}
 # This is a hack around Seurat's method.  If this is improved, shift to use that:
 HTODemux2 <- function(
   object,
