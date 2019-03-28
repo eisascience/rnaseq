@@ -804,3 +804,10 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
     return(which.max(DF$dist))
   }    
 }
+
+writeSummaryMetrics <- function(seuratObj, outputFile) {
+  df <- data.frame(Category = "Seurat", MetricName = "TotalCells", value = ncol(seuratObj))
+  df <- rbind(df, data.frame(Category = "Seurat", MetricName = "TotalFeatures", value = nrow(seuratObj)))
+              
+  write.table(df, file = outputFile, quote = F, row.names = F, sep = '\t')
+}

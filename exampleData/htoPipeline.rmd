@@ -1,5 +1,5 @@
 
-```{r}
+```{r include=FALSE}
 
 source('../seurat/cellHashingFunctions.R')
 
@@ -16,11 +16,10 @@ print(barcodeFile)
 
 ```
 
+
 # Basic QC and Filtering on input:
 
 ```{r QC}
-
-
 
 barcodeData <- processCiteSeqCount(bFile=barcodeFile)
 

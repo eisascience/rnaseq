@@ -9,12 +9,13 @@ library(knitr)
 library(KernSmooth)
 library(naturalsort)
 
+library(cluster)
+library(fitdistrplus)
+
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 source("https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFunctions.R")
 
-processCiteSeqCount <- function(bFile=NA, minRowSum = 5, 
-                                minRowMax = 40, 
-                                minMeanNonZeroCount = 5) {
+processCiteSeqCount <- function(bFile=NA) {
   if (is.na(bFile)){
     stop("No file set: change bFile")
   } 
@@ -24,12 +25,40 @@ processCiteSeqCount <- function(bFile=NA, minRowSum = 5,
   print(paste0('Initial barcodes in HTO data: ', ncol(bData)))
   
   bData <- doCellFiltering(bData)
+  
+  bData <- doRowFiltering(bData)
     
-  thresholdRowMax <- inferThresholds(rowSums(bData), dataLabel = 'Row Sums')
-  print(thresholdRowMax)
+  # repeat colsum filter.  because we potentially dropped rows, some cells might now drop out
+  bData <- doCellFiltering(bData)
+  
+  #repeat summary:
+  if (nrow(bData) == 0) {
+    print('No HTOs remaining')
+  } else {
+    rowSummary <- generateByRowSummary(bData)
+    print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
+  }
+  
+  return(bData)  
+}
+
+doRowFiltering <- function(bData, minRowSum = 5, 
+                           minRowMax = 40, 
+                           minMeanNonZeroCount = 5){
+  rowSummary <- generateByRowSummary(bData)
+  
+  thresholdRowSum <- inferThresholds(rowSums(bData), dataLabel = 'Row Sums')
+  print(thresholdRowSum)
+  #TODO: consider using this
+  #minRowSum <- thresholdRowSum$ElbowThreshold
   
   boxplot(log2(rowSums(bData)), ylim=range(0:20), main = "Row Sums (log2)")
   abline(h=log2(minRowSum))
+
+  thresholdRowMax <- inferThresholds(rowSummary$max, dataLabel = 'Row Max')
+  print(thresholdRowMax)
+  #TODO: consider using this
+  #minRowMax <- thresholdRowMax$ElbowThreshold
   
   #rowsum
   toDrop <- sum(rowSums(bData) < minRowSum)
@@ -69,19 +98,8 @@ processCiteSeqCount <- function(bFile=NA, minRowSum = 5,
     print(paste0('HTOs after filter: ', nrow(bData)))
     print(paste(rownames(bData), collapse = ', '))
   }
-  
-  # repeat colsum filter.  because we potentially dropped rows, some cells might now drop out
-  bData <- doCellFiltering(bData)
-  
-  #repeat summary:
-  if (nrow(bData) == 0) {
-    print('No HTOs remaining')
-  } else {
-    rowSummary <- generateByRowSummary(bData)
-    print(kable(rowSummary, caption = 'HTO Summary After Filter', row.names = F))
-  }
-  
-  return(bData)  
+
+  return(bData)
 }
 
 generateByRowSummary <- function(barcodeData) {
@@ -99,9 +117,7 @@ generateByRowSummary <- function(barcodeData) {
   return(df)
 }
 
-#TODO: this min.y needs to be set at a value that is globally good, 5000 is chosen during dev on the subset of data available
-
-inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, findElbowMinY = 5000) {
+inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, findElbowMinY = NA) {
   print(paste0('Inferring thresholds for: ', dataLabel))
   ret <- list()
   
@@ -132,9 +148,8 @@ inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, find
                                        })))); NoOfSteps = round(length(data)/2)
   }
   
-  #TODO: this is giving error: the condition has length > 1 and only the first element will be used
   tempElbow <- findElbow(y=(tempDF.plot$y), plot=F, min.y = findElbowMinY, ignore.concavity = T)
-  
+
   #since the findElbow is ordering y decendingly, and we did 1:30
   tempElbow <- NoOfSteps - tempElbow
   if (plotFigs){
@@ -151,7 +166,7 @@ inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, find
 }
 
 doCellFiltering <- function(bData, minQuant = 0.05){
-  thresholdsSum <- inferThresholds(colSums(bData), dataLabel = "Column Sums", minQuant = minQuant)
+  thresholdsSum <- inferThresholds(colSums(bData), dataLabel = "Column Sums", minQuant = minQuant, findElbowMinY = 5000)
   minColSum <- thresholdsSum$ElbowThreshold
   
   #colsum filter
@@ -165,7 +180,7 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   #colmax filter
   barcodeMatrix <- as.matrix(bData)
   cm <- apply(barcodeMatrix, 2, max)
-  thresholdsMax <- inferThresholds(cm, dataLabel = "Column Max", minQuant = minQuant)
+  thresholdsMax <- inferThresholds(cm, dataLabel = "Column Max", minQuant = minQuant, findElbowMinY = 5000)
   minColMax <- thresholdsMax$ElbowThreshold
   
   toDrop <- sum(cm < minColMax)
@@ -261,10 +276,35 @@ appendCellHashing <- function(seuratObj, barcodeCallTable) {
   return(seuratObj)
 }
 
+debugDemux <- function(seuratObj) {
+  print('Debugging information for Seurat HTODemux:')
+  data <- GetAssayData(object = seuratObj, assay = 'HTO')
+  ncenters <- (nrow(x = data) + 1)
+  
+  init.clusters <- clara(
+    x = t(x = GetAssayData(object = seuratObj, assay = 'HTO')),
+    k = ncenters,
+    samples = 100 
+  )
+  #identify positive and negative signals for all HTO
+  Idents(object = seuratObj, cells = names(x = init.clusters$clustering), drop = TRUE) <- init.clusters$clustering
+  
+  average.expression <- AverageExpression(
+    object = seuratObj,
+    assay = "HTO",
+    verbose = FALSE
+  )[["HTO"]]
+  
+  print(average.expression)
+}
+
 doHtoDemux <- function(seuratObj) {
   # Normalize HTO data, here we use centered log-ratio (CLR) transformation
   seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", display.progress = FALSE)
-  seuratObj <- HTODemux(seuratObj, assay = "HTO", positive.quantile =  0.99)
+  
+  debugDemux(seuratObj)
+  
+  seuratObj <- HTODemux2(seuratObj, positive.quantile =  0.99)
   
   #report outcome
   print(table(seuratObj$HTO_classification.global))
@@ -584,4 +624,137 @@ printFinalSummary <- function(dt, barcodeData){
   )
   
   return(merged)
+}
+
+# This is a hack around Seurat's method.  If this is improved, shift to use that:
+HTODemux2 <- function(
+  object,
+  assay = "HTO",
+  positive.quantile = 0.99,
+  nstarts = 100,
+  kfunc = "clara",
+  nsamples = 100,
+  verbose = TRUE
+) {
+  #initial clustering
+  data <- GetAssayData(object = object, assay = assay)
+  counts <- GetAssayData(
+    object = object,
+    assay = assay,
+    slot = 'counts'
+  )[, colnames(x = object)]
+  counts <- as.matrix(x = counts)
+  ncenters <- (nrow(x = data) + 1)
+  switch(
+    EXPR = kfunc,
+    'kmeans' = {
+      init.clusters <- kmeans(
+        x = t(x = GetAssayData(object = object, assay = assay)),
+        centers = ncenters,
+        nstart = nstarts
+      )
+      #identify positive and negative signals for all HTO
+      Idents(object = object, cells = names(x = init.clusters$cluster)) <- init.clusters$cluster
+    },
+    'clara' = {
+      #use fast k-medoid clustering
+      init.clusters <- clara(
+        x = t(x = GetAssayData(object = object, assay = assay)),
+        k = ncenters,
+        samples = nsamples
+      )
+      #identify positive and negative signals for all HTO
+      Idents(object = object, cells = names(x = init.clusters$clustering), drop = TRUE) <- init.clusters$clustering
+    },
+    stop("Unknown k-means function ", kfunc, ", please choose from 'kmeans' or 'clara'")
+  )
+  #average hto signals per cluster
+  #work around so we don't average all the RNA levels which takes time
+  average.expression <- AverageExpression(
+    object = object,
+    assay = assay,
+    verbose = FALSE
+  )[[assay]]
+
+  #TODO: checking for any HTO negative in all clusters:
+  
+  #if (sum(average.expression == 0) > 0) {
+  #  stop("Cells with zero counts exist as a cluster.")
+  #}
+  
+  #create a matrix to store classification result
+  discrete <- GetAssayData(object = object, assay = assay)
+  discrete[discrete > 0] <- 0
+  # for each HTO, we will use the minimum cluster for fitting
+  for (iter in rownames(x = data)) {
+    values <- counts[iter, colnames(object)]
+    #commented out if we take all but the top cluster as background
+    #values_negative=values[setdiff(object@cell.names,WhichCells(object,which.max(average.expression[iter,])))]
+    
+    minNonZero <- which.min(x = average.expression[iter,average.expression[iter, ] > 0])
+    values.use <- values[WhichCells(
+      object = object,
+      idents = levels(x = Idents(object = object))[[minNonZero]]
+    )]
+    fit <- suppressWarnings(expr = fitdist(data = values.use, distr = "nbinom"))
+    cutoff <- as.numeric(x = quantile(x = fit, probs = positive.quantile)$quantiles[1])
+    discrete[iter, names(x = which(x = values > cutoff))] <- 1
+    if (verbose) {
+      message(paste0("Cutoff for ", iter, " : ", cutoff, " reads"))
+    }
+  }
+  # now assign cells to HTO based on discretized values
+  npositive <- colSums(x = discrete)
+  classification.global <- npositive
+  classification.global[npositive == 0] <- "Negative"
+  classification.global[npositive == 1] <- "Singlet"
+  classification.global[npositive > 1] <- "Doublet"
+  donor.id = rownames(x = data)
+  hash.max <- apply(X = data, MARGIN = 2, FUN = max)
+  hash.maxID <- apply(X = data, MARGIN = 2, FUN = which.max)
+  hash.second <- apply(X = data, MARGIN = 2, FUN = Seurat:::MaxN, N = 2)
+  hash.maxID <- as.character(x = donor.id[sapply(
+    X = 1:ncol(x = data),
+    FUN = function(x) {
+      return(which(x = data[, x] == hash.max[x])[1])
+    }
+  )])
+  hash.secondID <- as.character(x = donor.id[sapply(
+    X = 1:ncol(x = data),
+    FUN = function(x) {
+      return(which(x = data[, x] == hash.second[x])[1])
+    }
+  )])
+  hash.margin <- hash.max - hash.second
+  doublet_id <- sapply(
+    X = 1:length(x = hash.maxID),
+    FUN = function(x) {
+      return(paste(sort(x = c(hash.maxID[x], hash.secondID[x])), collapse = "_"))
+    }
+  )
+  # doublet_names <- names(x = table(doublet_id))[-1] # Not used
+  classification <- classification.global
+  classification[classification.global == "Negative"] <- "Negative"
+  classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
+  classification[classification.global == "Doublet"] <- doublet_id[which(x = classification.global == "Doublet")]
+  classification.metadata <- data.frame(
+    hash.maxID,
+    hash.secondID,
+    hash.margin,
+    classification,
+    classification.global
+  )
+  colnames(x = classification.metadata) <- paste(
+    assay,
+    c('maxID', 'secondID', 'margin', 'classification', 'classification.global'),
+    sep = '_'
+  )
+  object <- AddMetaData(object = object, metadata = classification.metadata)
+  Idents(object) <- paste0(assay, '_classification')
+  # Idents(object, cells = rownames(object@meta.data[object@meta.data$classification.global == "Doublet", ])) <- "Doublet"
+  doublets <- rownames(x = object[[]])[which(object[[paste0(assay, "_classification.global")]] == "Doublet")]
+  Idents(object = object, cells = doublets) <- 'Doublet'
+  # object@meta.data$hash.ID <- Idents(object)
+  object$hash.ID <- Idents(object = object)
+  return(object)
 }

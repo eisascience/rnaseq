@@ -24,10 +24,15 @@ source('../seurat/seuratFunctions.R')
 #Create Test Data:
 #data1 <- createExampleData(nCol = 10, nRow = 100)
 
-outPrefix <- 'testData'
+
+outDir <- './outs/'
+if (!dir.exists(outDir)){
+  dir.create(outDir)
+}
+outPrefix <- paste0(outDir, 'testData')
 
 data <- list(
-  'Set1' = '10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293'
+  'Set1' = '../10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293'
   #'Set2' = '10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
 )
 
@@ -96,6 +101,14 @@ findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.tx
 
 ```
 
+## Write Summary
+
+```{r}
+
+writeSummaryMetrics(seuratObj, file = paste0(outPrefix, '.summary.txt'))
+
+```
+##Session Info
 
 ```{r}
 
