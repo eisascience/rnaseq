@@ -120,6 +120,10 @@ generateByRowSummary <- function(barcodeData) {
 inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, findElbowMinY = NA) {
   print(paste0('Inferring thresholds for: ', dataLabel))
   ret <- list()
+  if (length(data) == 0) {
+    print('Unable to infer thresholds, data was empty')
+    return(ret)
+  }
   
   #this method requires one to set the quantile of outliers desired.
   ld <- log2(data + 1)
@@ -569,6 +573,9 @@ printFinalSummary <- function(dt, barcodeData){
   bc$CellBarcode <- rownames(bc)
   merged <- merge(merged, bc, by = c('CellBarcode'), all.x = T, all.y = F)
  
+  merged$HTO[is.na(merged$HTO)] <- c('Negative')
+  merged$HTO_Classification[is.na(merged$HTO_Classification)] <- c('Negative')
+  
   #summarize reads by type:
   barcodeMatrix <- as.matrix(barcodeData)
   cs <- colSums(barcodeMatrix)
