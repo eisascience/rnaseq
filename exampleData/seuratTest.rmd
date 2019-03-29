@@ -32,8 +32,8 @@ if (!dir.exists(outDir)){
 outPrefix <- paste0(outDir, 'testData')
 
 data <- list(
-  'Set1' = '../10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293'
-  #'Set2' = '10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
+  'Set1' = '../exampleData/10XCounts/247-1-CellRanger2/raw_gene_bc_matrices/cellRanger-3204293'
+  #'Set2' = '../exampleData/10xCounts/248-1-CellRanger3/raw_feature_bc_matrix'
 )
 
 resolutionToUse <- 0.6
@@ -52,9 +52,9 @@ seuratObjs <- list()
 
 for (datasetName in names(data)) {
   print(paste0('Loading dataset: ', datasetName))
-  seuratObjs[datasetName] <- readAndFilter10xData(data[[datasetName]], datasetName)
+  seuratObjs[[datasetName]] <- readAndFilter10xData(data[[datasetName]], datasetName)
 
-  print(seuratObjs[datasetName])
+  print(seuratObjs[[datasetName]])
 }
 
 
