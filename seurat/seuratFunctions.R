@@ -433,11 +433,15 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
   toPlot <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster)  %>% filter(avg_logFC > 0.5) %>% top_n(9, avg_logFC) %>% select(gene)
   
   write.table(toPlot, file = outFile, sep = '\t', row.names = F, quote = F)
-  
-  print(DimPlot(object = seuratObj, reduction = 'tsne'))
-  
-  top10 <- seuratObj.markers %>% group_by(cluster) %>% top_n(10, avg_logFC)
-  print(DoHeatmap(object = seuratObj, features = top10$gene))
+
+  if (nrow(toPlot) == 0) {  
+    print('No significant markers were found')
+  } else {
+    print(DimPlot(object = seuratObj, reduction = 'tsne'))
+    
+    top10 <- seuratObj.markers %>% group_by(cluster) %>% top_n(10, avg_logFC)
+    print(DoHeatmap(object = seuratObj, features = top10$gene))
+  }
   
   return(toPlot)
 }

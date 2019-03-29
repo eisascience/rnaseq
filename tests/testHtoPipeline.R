@@ -68,4 +68,4 @@ for (dataset in names(datasets)) {
                                          diff = paste0(differing, collapse = ',')))
 }
 
-write.table(outcomes, file = 'testResults.txt', quote = F, sep = '\t', row.names = F)
+write.table(outcomes, file = paste0(outDir,'testResults.txt'), quote = F, sep = '\t', row.names = F)
