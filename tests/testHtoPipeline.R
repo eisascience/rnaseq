@@ -9,12 +9,12 @@ datasets <- list(
 )
 
 expectations <- list(
-  '267-1' = list(htos = c(1:4), gexBarcodeFile = ''),
-  '267-2' = list(htos = c(1:4), gexBarcodeFile = ''),
-  '253-1' = list(htos = c(1:7), gexBarcodeFile = ''),
-  '260-4' = list(htos = c(5:8), gexBarcodeFile = ''),
-  '278-1' = list(htos = c(6:9), gexBarcodeFile = ''),
-  '282-1' = list(htos = c(1:3, 8, 10, 12), gexBarcodeFile = '')
+  '267-1' = list(htos = c(1:4), gexBarcodeFile = NULL),
+  '267-2' = list(htos = c(1:4), gexBarcodeFile = NULL),
+  '253-1' = list(htos = c(1:7), gexBarcodeFile = NULL),
+  '260-4' = list(htos = c(5:8), gexBarcodeFile = NULL),
+  '278-1' = list(htos = c(6:9), gexBarcodeFile = NULL),
+  '282-1' = list(htos = c(1:3, 8, 10, 12), gexBarcodeFile = 'cellHashing/282-1-whitelist.txt')
 )
 
 #relative to ./tests (assumed to be current working dir)
@@ -36,10 +36,21 @@ for (dataset in names(datasets)) {
   outputFile <- paste0(outDirRmd, dataset, '.html')
   barcodeFile <- paste0('../exampleData/', barcodeFile)
   
+  datasetExpectations <- expectations[[dataset]]
+  
+  #this will result in a concordance report being created
+  if (!is.null(datasetExpectations[['gexBarcodeFile']])){
+    whitelistFile <- datasetExpectations[['gexBarcodeFile']]   
+    summaryFile <- paste0(outDirRmd, dataset, '.summary.txt')
+  }
+  
   #Note: paths are relative to the RMD file
   rmarkdown::render('../exampleData/htoPipeline.rmd', output_file = outputFile, output_format = 'html_document')
   
-  datasetExpectations <- expectations[[dataset]]
+  if (exists('whitelistFile')) {
+    rm(whitelistFile)
+    rm(summaryFile)
+  }
   
   print('Expected HTOs')
   expectedHtos <- sort(paste0('HTO-', datasetExpectations$htos))

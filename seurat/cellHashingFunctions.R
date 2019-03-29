@@ -792,3 +792,48 @@ HTODemux2 <- function(
   object$hash.ID <- Idents(object = object)
   return(object)
 }
+
+generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile) {
+  categoryName <- "Cell Hashing Concordance"
+  
+  whitelist <- read.table(whitelistFile, sep = '\t', header = F)
+  names(whitelist) <- c('CellBarcode')
+  df <- data.frame(Category = categoryName, MetricName = "InputBarcodes", Value = length(whitelist$CellBarcode))
+
+  #Any called cell:
+  calledCellBarcodes <- dt$CellBarcode[dt$HTO_Classification != 'Negative']
+  calledIntersect <- intersect(whitelist$CellBarcode, calledCellBarcodes)
+  
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalCalled", Value = length(calledCellBarcodes)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalCalledOverlapping", Value = length(calledIntersect)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionOfInputCalled", Value = (length(calledIntersect) / length(whitelist$CellBarcode))))
+  
+  totalCalledNotInInput <- length(calledCellBarcodes) - length(calledIntersect)
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalCalledNotInInput", Value = totalCalledNotInInput))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionCalledNotInInput", Value = (totalCalledNotInInput / length(calledCellBarcodes))))
+
+  #Singlets:
+  singletCellBarcodes <- dt$CellBarcode[dt$HTO_Classification == 'Singlet']
+  singletIntersect <- intersect(whitelist$CellBarcode, singletCellBarcodes)
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalSinglet", Value = length(singletCellBarcodes)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalSingletOverlapping", Value = length(singletIntersect)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionOfInputSinglet", Value = (length(singletIntersect) / length(whitelist$CellBarcode))))
+  
+  totalSingletNotInInput <- length(singletCellBarcodes) - length(singletIntersect)
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalSingletNotInInput", Value = totalSingletNotInInput))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionSingletNotInInput", Value = (totalSingletNotInInput / length(singletCellBarcodes))))
+  
+  #Doublets:
+  doubletCellBarcodes <- dt$CellBarcode[dt$HTO_Classification == 'Doublet']
+  doubletIntersect <- intersect(whitelist$CellBarcode, doubletCellBarcodes)
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalDoublet", Value = length(doubletCellBarcodes)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalDoubletOverlapping", Value = length(doubletIntersect)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionOfInputDoublet", Value = (length(doubletIntersect) / length(whitelist$CellBarcode))))
+  
+  totalDoubletNotInInput <- length(doubletCellBarcodes) - length(doubletIntersect)
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalDoubletNotInInput", Value = totalDoubletNotInInput))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionDoubletNotInInput", Value = (totalDoubletNotInInput / length(doubletCellBarcodes))))
+  
+  
+  write.table(df, file = outputFile, quote = F, row.names = F, sep = '\t')
+}
