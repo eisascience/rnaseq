@@ -107,6 +107,8 @@ findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.tx
 
 writeSummaryMetrics(seuratObj, file = paste0(outPrefix, '.summary.txt'))
 
+saveDimRedux(seuratObj, file = paste(outPrefix, ".DimReduxComps.csv", sep=""))
+
 ```
 ##Session Info
 

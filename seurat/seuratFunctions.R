@@ -139,9 +139,9 @@ mergeSeuratObjs <- function(seuratObjs, data){
 
 processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFilter = F,
                            nUMI.high = 20000, nGene.high = 3000, pMito.high = 0.15,
-                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf){
+                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, forceReCalc = F){
   
-  if (doCellFilter & !hasStepRun(seuratObj, 'FilterCells')) {
+  if (doCellFilter & (forceReCalc | !hasStepRun(seuratObj, 'FilterCells'))) {
     print("Filtering Cells...")
     seuratObj@misc$OriginalCells <- length(colnames(x = seuratObj))
     seuratObj <- subset(x = seuratObj, subset = nCount_RNA > nGene.low & nCount_RNA < nGene.high)
@@ -153,42 +153,42 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
     seuratObj <- markStepRun(seuratObj, 'FilterCells')
   }
   
-  if (!hasStepRun(seuratObj, 'NormalizeData')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'NormalizeData')) {
     seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize", verbose = F)
     seuratObj <- markStepRun(seuratObj, 'NormalizeData', saveFile)
   }
   
-  if (!hasStepRun(seuratObj, 'FindVariableFeatures')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'FindVariableFeatures')) {
     seuratObj <- FindVariableFeatures(object = seuratObj, selection.method = 'mean.var.plot', mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf), verbose = F)
     seuratObj <- markStepRun(seuratObj, 'FindVariableFeatures', saveFile)
   }
   
-  if (!hasStepRun(seuratObj, 'ScaleData')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'ScaleData')) {
     seuratObj <- ScaleData(object = seuratObj, features = rownames(x = seuratObj), vars.to.regress = c("nCount_RNA", "percent.mito"), display.progress = F, verbose = F)
     seuratObj <- markStepRun(seuratObj, 'ScaleData')
   }
   
-  if (!hasStepRun(seuratObj, 'RunPCA')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'RunPCA')) {
     seuratObj <- RunPCA(object = seuratObj, features = VariableFeatures(object = seuratObj), verbose = F)
     seuratObj <- markStepRun(seuratObj, 'RunPCA')
   }
   
-  if (doCellCycle & !hasStepRun(seuratObj, 'CellCycle')) {
+  if (doCellCycle & (forceReCalc | !hasStepRun(seuratObj, 'CellCycle'))) {
     seuratObj <- removeCellCycle(seuratObj)
     seuratObj <- markStepRun(seuratObj, 'CellCycle', saveFile)
   }
   
-  if (!hasStepRun(seuratObj, 'ProjectDim')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'ProjectDim')) {
     seuratObj <- ProjectDim(object = seuratObj)
     seuratObj <- markStepRun(seuratObj, 'ProjectDim')
   }
   
-  if (!hasStepRun(seuratObj, 'JackStraw')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'JackStraw')) {
     seuratObj <- JackStraw(object = seuratObj, num.replicate = 100, verbose = F)
     seuratObj <- markStepRun(seuratObj, 'JackStraw', saveFile)
   }
   
-  if (!hasStepRun(seuratObj, 'ScoreJackStraw')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'ScoreJackStraw')) {
     seuratObj <- ScoreJackStraw(object = seuratObj, dims = 1:20)
     seuratObj <- markStepRun(seuratObj, 'ScoreJackStraw')
   }
@@ -358,7 +358,7 @@ removeCellCycle <- function(seuratObj) {
   return(seuratObj)
 }
 
-findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL) {
+findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL, forceReCalc = F) {
   if (is.null(dimsToUse)) {
     elbow <- findSeuratElbow(seuratObj)
     print(paste0('Inferred elbow: ', elbow))
@@ -366,12 +366,12 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
     dimsToUse <- 1:elbow
   }
   
-  if (!hasStepRun(seuratObj, 'FindNeighbors')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'FindNeighbors')) {
     seuratObj <- FindNeighbors(object = seuratObj, dims = dimsToUse)
     seuratObj <- markStepRun(seuratObj, 'FindNeighbors')
   }
   
-  if (!hasStepRun(seuratObj, 'FindClusters')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'FindClusters')) {
     for (resolution in c(0.2, 0.4, 0.8, 1.2, 0.6)){
       seuratObj <- FindClusters(object = seuratObj, resolution = resolution)
       seuratObj[[paste0("ClusterNames_", resolution)]] <- Idents(object = seuratObj, verbose = F)
@@ -379,7 +379,7 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
     }
   }
   
-  if (!hasStepRun(seuratObj, 'RunTSNE')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'RunTSNE')) {
     # To avoid Rtsne 'perplexity is too large for the number of samples' error.
     # See check here: https://github.com/jkrijthe/Rtsne/blob/ebed20f612712987fd160386132c17289169b4d8/R/utils.R
     # See also: https://github.com/satijalab/seurat/issues/167
@@ -396,7 +396,7 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
 
-  if (!hasStepRun(seuratObj, 'RunUMAP')) {
+  if (forceReCalc | !hasStepRun(seuratObj, 'RunUMAP')) {
     seuratObj <- RunUMAP(seuratObj,
                          dims = dimsToUse,
                          n.neighbors = 40L,
@@ -817,4 +817,47 @@ writeSummaryMetrics <- function(seuratObj, file) {
   df <- rbind(df, data.frame(Category = "Seurat", MetricName = "TotalFeatures", Value = nrow(seuratObj)))
               
   write.table(df, file = file, quote = F, row.names = F, sep = '\t')
+}
+
+saveDimRedux <- function(serObj, reductions=c("pca", "tsne", "umap"),
+                                file=NA, maxPCAcomps=10){
+  
+  if (is.na(file)){
+    stop("file is required")
+  }
+  
+  tempDT <- data.table(cbind(1:ncol(serObj), colnames(serObj)))
+  rownames(tempDT) <- colnames(serObj)
+  colnames(tempDT) <- c("nID", "cID")
+  
+  if("tsne" %in% reductions) {
+    if(is.null(serObj@reductions$tsne)) print("tsne slot NULL") else {
+      
+    }
+    tsneDT <- data.table(serObj@reductions$tsne@cell.embeddings)
+    tsneDT$cID <- rownames(serObj@reductions$tsne@cell.embeddings)
+    tempDT <- merge(tempDT, tsneDT, by="cID")
+  }
+  
+  if("pca" %in% reductions) {
+    if(is.null(serObj@reductions$pca)) print("pca slot NULL") else {
+      pcaDT <- data.table(serObj@reductions$pca@cell.embeddings[,1:maxPCAcomps])
+      pcaDT$cID <- rownames(serObj@reductions$pca@cell.embeddings)
+      tempDT <- merge(tempDT, pcaDT, by="cID")
+    }
+    
+  }
+  
+  if("umap" %in% reductions) {
+    if(is.null(serObj@reductions$umap)) print("umap slot NULL") else {
+      umapDT <- data.table(serObj@reductions$umap@cell.embeddings)
+      umapDT$cID <- rownames(serObj@reductions$umap@cell.embeddings)
+      tempDT <- merge(tempDT, umapDT, by="cID")
+    }
+    
+  }
+  
+  print("saving DimRedux")
+  
+  write.csv(tempDT, file = file, row.names=TRUE)
 }
