@@ -1,0 +1,20 @@
+﻿GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	ASSIGNED BY	ANNOTATION EXTENSION	GO ASPECT
+UniProtKB	A0A024R2B3	BCL2	involved_in	GO:0043375	CD8-positive, alpha-beta T cell lineage commitment	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P10417|ensembl:ENSMUSP00000108371	9606	Ensembl		P
+UniProtKB	A5LHX3	PSMB11	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:Q8BG41|ensembl:ENSMUSP00000132140	9606	Ensembl		P
+UniProtKB	H9NIM1	hCG_1644110	involved_in	GO:0002300	CD8-positive, alpha-beta intraepithelial T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:Q8K1Z6|ensembl:ENSMUSP00000061410	9606	Ensembl		P
+UniProtKB	O95936	EOMES	involved_in	GO:0002302	CD8-positive, alpha-beta T cell differentiation involved in immune response	ECO:0000315	IMP	PMID:17566017		9606	UniProt		P
+UniProtKB	O95936	EOMES	involved_in	GO:0002302	CD8-positive, alpha-beta T cell differentiation involved in immune response	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:O54839|ensembl:ENSMUSP00000035020	9606	Ensembl		P
+UniProtKB	P01892	HLA-A	involved_in	GO:0036037	CD8-positive, alpha-beta T cell activation	ECO:0000314	IDA	PMID:12138174		9606	UniProt		P
+UniProtKB	P01892	HLA-A	involved_in	GO:0036037	CD8-positive, alpha-beta T cell activation	ECO:0000314	IDA	PMID:8630735		9606	UniProt		P
+UniProtKB	P01892	HLA-A	involved_in	GO:0036037	CD8-positive, alpha-beta T cell activation	ECO:0000314	IDA	PMID:2784196		9606	UniProt		P
+UniProtKB	P10415	BCL2	involved_in	GO:0043375	CD8-positive, alpha-beta T cell lineage commitment	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P10417|ensembl:ENSMUSP00000108371	9606	Ensembl		P
+UniProtKB	P10914	IRF1	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P15314|ensembl:ENSMUSP00000104548	9606	Ensembl		P
+UniProtKB	P13747	HLA-E	involved_in	GO:0036037	CD8-positive, alpha-beta T cell activation	ECO:0000314	IDA	PMID:25631937		9606	UniProt		P
+UniProtKB	P15863	PAX1	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P09084|ensembl:ENSMUSP00000105594	9606	Ensembl		P
+UniProtKB	P32971	TNFSF8	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000318	IBA	PMID:21873635	MGI:MGI:88328|PANTHER:PTN000426273	9606	GO_Central		P
+UniProtKB	P32971	TNFSF8	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P32972|ensembl:ENSMUSP00000030047	9606	Ensembl		P
+UniProtKB	Q01826	SATB1	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:Q60611|ensembl:ENSMUSP00000116006	9606	Ensembl		P
+UniProtKB	Q14330	GPR18	involved_in	GO:0002300	CD8-positive, alpha-beta intraepithelial T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:Q8K1Z6|ensembl:ENSMUSP00000061410	9606	Ensembl		P
+UniProtKB	Q52M88	TNFSF8	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P32972|ensembl:ENSMUSP00000030047	9606	Ensembl		P
+UniProtKB	Q6FHN8	IRF1	involved_in	GO:0043374	CD8-positive, alpha-beta T cell differentiation	ECO:0000265	IEA	GO_REF:0000107	UniProtKB:P15314|ensembl:ENSMUSP00000104548	9606	Ensembl		P
+UniProtKB	Q9UMR7	CLEC4A	involved_in	GO:0036037	CD8-positive, alpha-beta T cell activation	ECO:0000314	IDA	PMID:20530286		9606	UniProt		P
