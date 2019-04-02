@@ -288,18 +288,55 @@ generateCellHashCallsSeurat <- function(barcodeData) {
   })
 }
 
-appendCellHashing <- function(seuratObj, barcodeCallTable) {
-  print(paste0('Initial called barcodes in HTO data: ', nrow(barcodeCallTable)))
-  print(paste0('Initial barcodes in GEX data: ', ncol(seuratObj)))
+appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) {
+  print(paste0('Initial cell barcodes in GEX data: ', ncol(seuratObj)))
   
-  joint_bcs <- intersect(barcodeCallTable$CellBarcode,colnames(seuratObj))
-  print(paste0('Total barcodes shared between HTO and GEX data: ', length(joint_bcs)))
+  barcodeCallTable <- read.table(barcodeCallFile, sep = '\t', header = T)
+  if (!is.null(barcodePrefix)) {
+    barcodeCallTable$CellBarcode <- paste0(barcodePrefix, '_', barcodeCallTable$CellBarcode)
+  }
   
-  seuratObj <- subset(x = seuratObj, cells = joint_bcs)
-  barcodeCallTable <- barcodeCallTable[colnames(seuratObj),]
+  #Hack until we figure this out upstream
+  barcodeCallTable <- unique(barcodeCallTable)
   
-  seuratObj[['HTO']] <- barcodeCallTable$HTO
-  seuratObj[['HTO_Classification']] <- barcodeCallTable$HTO_Classification
+  barcodeCallTable <- barcodeCallTable[barcodeCallTable$HTO != 'Negative',]
+  print(paste0('Non-negative cell barcodes in HTO calls: ', nrow(barcodeCallTable)))
+  
+  #dup <- barcodeCallTable[barcodeCallTable$CellBarcode %in% barcodeCallTable$CellBarcode[duplicated(barcodeCallTable$CellBarcode)],]
+  #write.table(dup, file='duplicates.txt', sep = '\t', quote = F, row.names = F)
+  
+  # Dont overwrite in case we already added data for another dataset
+  if (!('HTO' %in% names(seuratObj@meta.data))) {
+    print('Adding HTO columns to seurat object')
+    seuratObj$HTO <- c(NA)
+    seuratObj$HTO_Classification <- c(NA)
+  }
+  
+  datasetSelect <- seuratObj$BarcodePrefix == barcodePrefix
+  df <- data.table(CellBarcode = colnames(seuratObj)[datasetSelect])
+  df <- merge(df, barcodeCallTable, all.x = T, all.y = F, by = c('CellBarcode'))
+  
+  if (sum(datasetSelect) != nrow(df)) {
+    stop('Length of data select and df do not match!')
+  }
+  
+  df$HTO <- as.character(df$HTO)
+  df$HTO_Classification <- as.character(df$HTO_Classification)
+  
+  df$HTO[is.na(df$HTO)] <- 'ND'
+  df$HTO_Classification[is.na(df$HTO_Classification)] <- 'ND'
+  print(paste0('Total HTOs added: ', nrow(df[!is.na(df$HTO),])))
+
+  # Check barcodes match before merge  
+  if (sum(df$cellBarcode != colnames(seuratObj)[seuratObj$BarcodePrefix == barcodePrefix]) > 0) {
+    stop('Seurat and HTO barcodes do not match after merge!')
+  }
+  
+  seuratObj$HTO <- as.character(seuratObj$HTO)
+  seuratObj$HTO_Classification <- as.character(seuratObj$HTO_Classification)
+  
+  seuratObj$HTO[seuratObj$BarcodePrefix == barcodePrefix] <- df$HTO
+  seuratObj$HTO_Classification[seuratObj$BarcodePrefix == barcodePrefix] <- df$HTO_Classification
   
   return(seuratObj)
 }
@@ -375,13 +412,13 @@ generateCellHashCallsMultiSeq <- function(barcodeData, showTSNE = T) {
     neg.cells <- c(neg.cells, r1$neg.cells)
     final.calls <- r1$final.calls
     
-    if (length(r1$neg.cells > 0)) {
+    if (length(r1$neg.cells > 0) && nrow(r1$bar.table) > 0) {
       r2 <- performRoundOfMultiSeqCalling(r1$bar.table, 2)
       if (is.list(r2)){
         neg.cells <- c(neg.cells, r2$neg.cells)
         final.calls <- r2$final.calls
     
-        if (length(r2$neg.cells > 0)) {    
+        if (length(r2$neg.cells > 0) && nrow(r2$bar.table) > 0) {    
           r3 <- performRoundOfMultiSeqCalling(r2$bar.table, 3)
           if (is.list(r3)){
             neg.cells <- c(neg.cells, r3$neg.cells)
@@ -834,6 +871,7 @@ generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile) {
   df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalDoubletNotInInput", Value = totalDoubletNotInInput))
   df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionDoubletNotInInput", Value = (totalDoubletNotInInput / length(doubletCellBarcodes))))
   
+  df$Value[is.na(df$Value)] <- 0
   
   write.table(df, file = outputFile, quote = F, row.names = F, sep = '\t')
 }
