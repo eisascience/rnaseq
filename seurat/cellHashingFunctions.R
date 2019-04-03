@@ -44,7 +44,7 @@ processCiteSeqCount <- function(bFile=NA) {
 
 doRowFiltering <- function(bData, minRowSum = 5, 
                            minRowMax = 20, 
-                           minRowMean = 0.5,
+                           minRowMean = 0.2,
                            minMeanNonZeroCount = 2){
 
   #thresholdRowSum <- inferThresholds(rowSums(bData), dataLabel = 'Row Sums')
@@ -125,7 +125,7 @@ generateByRowSummary <- function(barcodeData) {
   }
   
   barcodeMatrix <- as.matrix(barcodeData)
-  df <- data.frame(HTO = naturalfactor(rownames(barcodeData)), min = apply(barcodeData, 1, min), max = apply(barcodeData, 1, max), mean = apply(barcodeData, 1, mean), logmean = log(apply(barcodeData, 1, mean) + 1), nonzero = apply(barcodeData, 1, function(x){
+  df <- data.frame(HTO = naturalfactor(rownames(barcodeData)), min = apply(barcodeMatrix, 1, min), max = apply(barcodeMatrix, 1, max), mean = apply(barcodeMatrix, 1, mean), logmean = log(apply(barcodeMatrix, 1, mean) + 1), nonzero = apply(barcodeMatrix, 1, function(x){
     sum(x > 0)
   }), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
     sum(x > 1)  
