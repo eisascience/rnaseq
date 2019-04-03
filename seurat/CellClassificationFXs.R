@@ -265,8 +265,9 @@ ClassifyCellsCustom_SERIII <- function(Classifier.rds.path = "",
 
 
 
-
-predict_MCE_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rds",
+#name predict_MCE_SERIII was confusing, as MCE is only 1 method inside this function. Future Dev. can add more methods.
+                                 
+predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rds",
                                classification.path = NULL, file.select = NULL,
                                TrainedClassifiers.path = "../PBMC3k/data",
                                save.fig.path = NULL, col_vector=NULL, returnLS = F, GarnettClassify=F,
