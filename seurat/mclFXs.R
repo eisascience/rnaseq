@@ -37,10 +37,9 @@ QuickSerCombObjs <- function(save.fig.path="./Figs",
       print(fN)
       print("reading in Ser obj")
       exptNum <- gsub("-", "_", gsub("_SeuratObj.rds", "", basename(SerObj.files[fN])))
-      # prefix = paste("Testis", fN, sep="")
+
       seuratObjs <- readRDS(SerObj.files[fN])
-      # seuratObjs[[exptNum]] <- RenameCells(object = seuratObjs[[exptNum]], add.cell.id = prefix)
-      # seuratObjs[[exptNum]][['BarcodePrefix']] <- c(prefix)
+      
       seuratObjs[['OrigFileName']] <- c(exptNum)
       
       CleaningLS$SeurObjs[[fN]] <- seuratObjs
@@ -50,16 +49,13 @@ QuickSerCombObjs <- function(save.fig.path="./Figs",
     length(CleaningLS$SeurObjs)
     
     names(CleaningLS$SeurObjs) <- paste("ID", as.character(unlist(lapply(SerObj.files, function(xN){
-      #xN=SerObj.files[1]
-      #substring(x,regexpr(".rds", x)[1]-17 ,regexpr(".rds", x)[1]-1)
+      
       gsub("-", "_", gsub("_SeuratObj.rds", "", basename(xN)))
     }))), sep="_")
     
     
     TempA <- CleaningLS$SeurObjs[[names(CleaningLS$SeurObjs)[1]]]
-    #CleaningLS$SeurObjs[[names(CleaningLS$SeurObjs)[1]]] <- NULL
     TempB <- c(CleaningLS$SeurObjs[[names(CleaningLS$SeurObjs)[1]]])
-    #CleaningLS$SeurObjs[[names(CleaningLS$SeurObjs)[1]]] <- NULL
     
     for(ij in 3:length(CleaningLS$SeurObjs)){
       #ij = 2
