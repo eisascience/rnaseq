@@ -64,7 +64,7 @@ mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
 dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile)
 
 if (exists('whitelistFile') && !is.null(whitelistFile) && exists('summaryFile')){
-  generateSummaryForExpectedBarcodes(dt, whitelistFile = whitelistFile, outputFile = summaryFile)
+  generateSummaryForExpectedBarcodes(dt, whitelistFile = whitelistFile, outputFile = summaryFile, barcodeData = barcodeData)
 }
 
 

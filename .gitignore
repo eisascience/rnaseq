@@ -6,3 +6,5 @@ exampleData/savedSeurat.rds
 .Rhistory
 exampleData/outs*
 tests/outs/*
+data/QuickGO/*
+data/Classifiers/*

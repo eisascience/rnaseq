@@ -834,13 +834,16 @@ HTODemux2 <- function(
   return(object)
 }
 
-generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile) {
+generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile, barcodeData) {
   categoryName <- "Cell Hashing Concordance"
   
   whitelist <- read.table(whitelistFile, sep = '\t', header = F)
   names(whitelist) <- c('CellBarcode')
   df <- data.frame(Category = categoryName, MetricName = "InputBarcodes", Value = length(whitelist$CellBarcode))
 
+
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalCounts", Value = sum(barcodeData)))
+  
   #Any called cell:
   calledCellBarcodes <- dt$CellBarcode[dt$HTO_Classification != 'Negative']
   calledIntersect <- intersect(whitelist$CellBarcode, calledCellBarcodes)
