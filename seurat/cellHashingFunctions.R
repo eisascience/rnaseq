@@ -15,7 +15,7 @@ library(fitdistrplus)
 source('https://raw.githubusercontent.com/chris-mcginnis-ucsf/MULTI-seq/master/R/MULTIseq.Classification.Suite.R')
 source("https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFunctions.R")
 
-processCiteSeqCount <- function(bFile=NA) {
+processCiteSeqCount <- function(bFile=NA, doRowFilter = T) {
   if (is.na(bFile)){
     stop("No file set: change bFile")
   } 
@@ -26,10 +26,14 @@ processCiteSeqCount <- function(bFile=NA) {
   
   bData <- doCellFiltering(bData)
   
-  bData <- doRowFiltering(bData)
+  if (doRowFilter) {
+    bData <- doRowFiltering(bData)
     
-  # repeat colsum filter.  because we potentially dropped rows, some cells might now drop out
-  bData <- doCellFiltering(bData)
+    # repeat colsum filter.  because we potentially dropped rows, some cells might now drop out
+    bData <- doCellFiltering(bData)
+  } else {
+    print('Row filtering will not be performed')
+  }
   
   #repeat summary:
   if (nrow(bData) == 0) {
