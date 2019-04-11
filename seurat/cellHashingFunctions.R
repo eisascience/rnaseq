@@ -295,15 +295,21 @@ generateCellHashCallsSeurat <- function(barcodeData) {
 appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) {
   print(paste0('Initial cell barcodes in GEX data: ', ncol(seuratObj)))
   
+  if(!file.exists(barcodeCallFile)) stop("Barcode File Not found")
+  
   barcodeCallTable <- read.table(barcodeCallFile, sep = '\t', header = T)
   if (!is.null(barcodePrefix)) {
     barcodeCallTable$CellBarcode <- paste0(barcodePrefix, '_', barcodeCallTable$CellBarcode)
   }
   
   #Hack until we figure this out upstream
+  #TODO: Find discordant duplicates add as second col or convert to dublets or some 99 err
   barcodeCallTable <- unique(barcodeCallTable)
   
+  
   barcodeCallTable <- barcodeCallTable[barcodeCallTable$HTO != 'Negative',]
+  if(nrow(barcodeCallTable)==0) stop("Something is wrong, table became 0 rows")
+  
   print(paste0('Non-negative cell barcodes in HTO calls: ', nrow(barcodeCallTable)))
   
   #dup <- barcodeCallTable[barcodeCallTable$CellBarcode %in% barcodeCallTable$CellBarcode[duplicated(barcodeCallTable$CellBarcode)],]
