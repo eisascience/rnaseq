@@ -11,7 +11,7 @@ SaveDimRedux_SERIII <- function(seuratObj, reductions=c("pca", "tsne", "umap"),
     rownames(tempDT) <- colnames(serObj)
     colnames(tempDT) <- c("nID", "cID")
 
-    tempDT <- merge(tempDT, )
+    #tempDT <- merge(tempDT, )
 
     if("tsne" %in% reductions) {
       if(is.null(serObj@reductions$tsne)) print("tsne slot NULL") else {
@@ -86,10 +86,10 @@ AddModuleScore_SERIII <- function(
 
   cluster.length <- length(x = genes.list)
 
-  if (!all(LengthCheck(values = genes.list))) {
+  if (!all(Seurat:::LengthCheck(values = genes.list))) {
     warning(paste(
       'Could not find enough genes in the object from the following gene lists:',
-      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      paste(names(x = which(x = ! Seurat:::LengthCheck(values = genes.list)))),
       'Attempting to match case...'
     ))
 
@@ -99,10 +99,10 @@ AddModuleScore_SERIII <- function(
     )
   }
 
-  if (!all(LengthCheck(values = genes.list))) {
+  if (!all(Seurat:::LengthCheck(values = genes.list))) {
     stop(paste(
       'The following gene lists do not have enough genes present in the object:',
-      paste(names(x = which(x = ! LengthCheck(values = genes.list)))),
+      paste(names(x = which(x = ! Seurat:::LengthCheck(values = genes.list)))),
       'exiting...'
     ))
   }
