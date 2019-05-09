@@ -333,6 +333,30 @@ predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rd
         ClassifiersLS$SeuratGeneScore[[tempName]] <- list()
 
 
+        for(SERObj.path in SERObjects_processed.paths){
+
+      print(basename(SERObj.path))
+      tempSER <- readRDS(SERObj.path)
+      #tempSER <- SeuratObjs
+
+
+
+      tempName <- basename(gsub("_", "", gsub("-", "_", gsub("\\.", "", gsub("_SeuratObj.rds_proc.rds", "", SERObj.path)))))
+
+
+      # ModuleScoreGeneLists <- CTL_Immune_GeneList(QuickGO.path="/Volumes/Maggie/Work/OHSU/Eisa/R/scRNASeq/data/QuickGO")
+
+
+
+
+
+      if(ModuleScoreGeneListClassify){
+
+        print("Starting Seurat's AddModule Scoring for GeneSets")
+        #tempLSScores <- list()
+        ClassifiersLS$SeuratGeneScore[[tempName]] <- list()
+
+
         for(GeneList in names(ModuleScoreGeneLists)){
           # GeneList = names(ModuleScoreGeneLists)[1]
           print(GeneList)
@@ -340,14 +364,65 @@ predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rd
 
 
           if(length(ModuleScoreGeneLists[[GeneList]])>0){
-            ClassifiersLS$SeuratGeneScore[[tempName]][[GeneList]] <- AddModuleScore_SERIII(object=tempSER,
-                                                                               genes.list = list(ModuleScoreGeneLists[[GeneList]]),
-                                                                               genes.pool = NULL,
-                                                                               n.bin = 25,
-                                                                               seed.use = 123,
-                                                                               ctrl.size = 100,
-                                                                               enrich.name = GeneList,
-                                                                               random.seed = 1, returnScore = T)
+
+            MS.temp <-  try(AddModuleScore_SERIII(object=tempSER,
+                                                  genes.list = list(ModuleScoreGeneLists[[GeneList]]),
+                                                  genes.pool = NULL,
+                                                  n.bin = 25,
+                                                  seed.use = 123,
+                                                  ctrl.size = 100,
+                                                  enrich.name = GeneList,
+                                                  random.seed = 1, returnScore = T), silent = T)
+
+            if(class(MS.temp)=="try-error") {
+
+              #TODO: is there a quantitative way to best estimate n.bin based on number of genes?
+
+              print("bin size 25 was problematic... trying 30")
+              MS.temp <-  try(AddModuleScore_SERIII(object=tempSER,
+                                                    genes.list = list(ModuleScoreGeneLists[[GeneList]]),
+                                                    genes.pool = NULL,
+                                                    n.bin = 30,
+                                                    seed.use = 123,
+                                                    ctrl.size = 100,
+                                                    enrich.name = GeneList,
+                                                    random.seed = 1, returnScore = T), silent = T)
+
+              if(class(MS.temp)=="try-error") {
+
+                #TODO: is there a quantitative way to best estimate n.bin based on number of genes?
+
+                print("bin size 30 was problematic... trying 50")
+                MS.temp <-  try(AddModuleScore_SERIII(object=tempSER,
+                                                      genes.list = list(ModuleScoreGeneLists[[GeneList]]),
+                                                      genes.pool = NULL,
+                                                      n.bin = 50,
+                                                      seed.use = 123,
+                                                      ctrl.size = 100,
+                                                      enrich.name = GeneList,
+                                                      random.seed = 1, returnScore = T), silent = T)
+
+                if(class(MS.temp)=="try-error") {
+
+                  warning("bin size 25, 30 and 50 failed")
+
+                } else {
+
+                  print("bin size 50 worked!")
+                  ClassifiersLS$SeuratGeneScore[[tempName]][[GeneList]] <- MS.temp
+
+                }
+
+              } else {
+                print("bin size 30 worked!")
+                ClassifiersLS$SeuratGeneScore[[tempName]][[GeneList]] <- MS.temp
+              }
+
+            } else {
+              #print("bin size 25 worked!")
+              ClassifiersLS$SeuratGeneScore[[tempName]][[GeneList]] <- MS.temp
+            }
+
           } else {
             warning("length of gene list is <= 0 ")
 
@@ -358,6 +433,10 @@ predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rd
 
         #Seurate gene score (SGS)
         SGS.DF <- as.data.frame(ClassifiersLS$SeuratGeneScore[[tempName]])
+        
+        #this fixes the issue with multiple unnecessary columns of IDs
+        SGS.DF <- SGS.DF[,!grepl(".cID", colnames(SGS.DF))]
+        SGS.DF$cID <- rownames(SGS.DF)
 
         ClassifiersLS$SeuratGeneScore[[tempName]]$SGS.DF <- SGS.DF#ClassifiersLS$SeuratGeneScore
 
