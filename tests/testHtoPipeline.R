@@ -5,7 +5,8 @@ datasets <- list(
   '253-1' = 'cellHashing/253-1-citeSeqCounts.txt',
   '260-4' = 'cellHashing/260-4-HTO_cellHashingRawCounts.txt',
   '278-1' = 'cellHashing/278-1-HTO_cellHashingRawCounts.txt',
-  '282-1' = 'cellHashing/282-1-HTO_cellHashingRawCounts.txt'
+  '282-1' = 'cellHashing/282-1-HTO_cellHashingRawCounts.txt',
+  '283' = 'cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt'
 )
 
 expectations <- list(
@@ -14,7 +15,8 @@ expectations <- list(
   '253-1' = list(htos = c(1:7), gexBarcodeFile = NULL),
   '260-4' = list(htos = c(5:8), gexBarcodeFile = NULL),
   '278-1' = list(htos = c(6:9), gexBarcodeFile = NULL),
-  '282-1' = list(htos = c(1:3, 8, 10, 12), gexBarcodeFile = 'cellHashing/282-1-whitelist.txt')
+  '282-1' = list(htos = c(1:3, 8, 10, 12), gexBarcodeFile = 'cellHashing/282-1-whitelist.txt'),
+  '283' = list(htos = c(2:6), gexBarcodeFile = 'cellHashing/283-validCellIndexes.csv')
 )
 
 #relative to ./tests (assumed to be current working dir)

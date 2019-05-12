@@ -381,24 +381,59 @@ doHtoDemux <- function(seuratObj) {
   
   seuratObj <- HTODemux2(seuratObj, positive.quantile =  0.99)
   
+  htoSummary(seuratObj, field1 = 'HTO_classification.global', field2 = 'hash.ID')
+  
+  return(seuratObj)
+}
+
+generateCellHashCallsMultiSeq <- function(barcodeData) {
+  seuratObj <- CreateSeuratObject(barcodeData, assay = 'HTO')   
+  
+  tryCatch({
+    seuratObj <- doMULTIseqDemux(seuratObj)
+    
+    return(data.table(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$MULTI_ID, HTO_classification.global = seuratObj$MULTI_classification.global, key = c('Barcode')))
+  }, error = function(e){
+    print(e)
+    print('Error generating multiseq calls, aborting')
+    return(NA)
+  })
+}
+
+doMULTIseqDemux <- function(seuratObj) {
+  # Normalize HTO data, here we use centered log-ratio (CLR) transformation
+  seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", display.progress = FALSE)
+
+  seuratObj <- MULTIseqDemux(seuratObj, assay = "HTO", quantile = 0.7, autoThresh = T, maxiter = 50, qrange = seq(from = 0.1, to = 0.9, by = 0.05), verbose = TRUE)
+  
+  seuratObj$MULTI_classification.global <- as.character(seuratObj$MULTI_ID)
+  seuratObj$MULTI_classification.global[!(seuratObj$MULTI_ID %in% c('Negative', 'Doublet'))] <- 'Singlet'
+  seuratObj$MULTI_classification.global <- as.factor(seuratObj$MULTI_classification.global)
+  
+  htoSummary(seuratObj, field1 = 'MULTI_classification.global', field2 = 'MULTI_ID', doHeatmap = F)
+  
+  return(seuratObj)
+}
+
+htoSummary <- function(seuratObj, field1, field2, doHeatmap = T) {
   #report outcome
-  print(table(seuratObj$HTO_classification.global))
-  print(table(seuratObj$hash.ID))
+  print(table(seuratObj[[field1]]))
+  print(table(seuratObj[[field2]]))
   
   # Group cells based on the max HTO signal
   seuratObj_hashtag <- seuratObj
-  Idents(seuratObj_hashtag) <- "hash.ID"
+  Idents(seuratObj_hashtag) <- field2
   htos <- rownames(GetAssayData(seuratObj_hashtag,assay = "HTO"))
   for (hto in htos){
     print(RidgePlot(seuratObj_hashtag, features = c(hto), assay = 'HTO', ncol = 1))
   }
   
-  print(HTOHeatmap(seuratObj, assay = "HTO", classification = "HTO_classification", global.classification = "HTO_classification.global", ncells = min(3000, ncol(seuratObj)), singlet.names = NULL))
-  
-  return(seuratObj)
+  if (doHeatmap) {
+    print(HTOHeatmap(seuratObj, assay = "HTO", classification = field2, global.classification = field1, ncells = min(3000, ncol(seuratObj)), singlet.names = NULL))
+  }
 }
 
-generateCellHashCallsMultiSeq <- function(barcodeData, showTSNE = T) {
+generateCellHashCallsMultiSeqOld <- function(barcodeData, showTSNE = T) {
   #transpose CITE-seq count input:
   bar.table.full <- data.frame(t(barcodeData))
   
@@ -569,11 +604,20 @@ processEnsemblHtoCalls <- function(mc, sc, barcodeData,
   sc$Barcode <- as.character(sc$Barcode)
   merged <- merge(mc, sc, all = T, by = 'Barcode', suffixes = c('.MultiSeq', '.Seurat'))
   
+  merged$HTO_classification.MultiSeq[is.na(merged$HTO_classification.MultiSeq)] <- 'Negative'
+  merged$HTO_classification.Seurat[is.na(merged$HTO_classification.Seurat)] <- 'Negative'
+  
+  merged$HTO_classification.global.MultiSeq[is.na(merged$HTO_classification.global.MultiSeq)] <- 'Negative'
+  merged$HTO_classification.global.Seurat[is.na(merged$HTO_classification.global.Seurat)] <- 'Negative'
+  
   merged$Concordant <- as.character(merged$HTO_classification.MultiSeq) == as.character(merged$HTO_classification.Seurat)
   merged$ConcordantNoNeg <- !(!merged$Concordant & merged$HTO_classification.MultiSeq != 'Negative' & merged$HTO_classification.Seurat != 'Negative')
   merged$GlobalConcordant <- as.character(merged$HTO_classification.global.MultiSeq) == as.character(merged$HTO_classification.global.Seurat)
   merged$HasSeuratCall <- !is.na(merged$HTO_classification.Seurat) & merged$HTO_classification.Seurat != 'Negative'
   merged$HasMultiSeqCall <- !is.na(merged$HTO_classification.MultiSeq) & merged$HTO_classification.MultiSeq != 'Negative'
+  
+  merged$Seurat <- merged$HTO_classification.Seurat != 'Negative'
+  merged$MultiSeq <- merged$HTO_classification.MultiSeq != 'Negative'
   
   print(paste0('Total concordant: ', nrow(merged[merged$Concordant])))
   print(paste0('Total discordant: ', nrow(merged[!merged$Concordant])))
@@ -883,6 +927,10 @@ generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile, ba
   totalDoubletNotInInput <- length(doubletCellBarcodes) - length(doubletIntersect)
   df <- rbind(df, data.frame(Category = categoryName, MetricName = "TotalDoubletNotInInput", Value = totalDoubletNotInInput))
   df <- rbind(df, data.frame(Category = categoryName, MetricName = "FractionDoubletNotInInput", Value = (totalDoubletNotInInput / length(doubletCellBarcodes))))
+  
+  #By caller:
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "SeuratNonNegative", Value = sum(dt$Seurat)))
+  df <- rbind(df, data.frame(Category = categoryName, MetricName = "MultiSeqNonNegative", Value = sum(dt$MultiSeq)))
   
   df$Value[is.na(df$Value)] <- 0
   

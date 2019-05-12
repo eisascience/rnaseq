@@ -52,7 +52,7 @@ sc <- generateCellHashCallsSeurat(barcodeData)
 ```{r MULTI-seq}
 
 
-mc <- generateCellHashCallsMultiSeq(barcodeData, showTSNE = F)
+mc <- generateCellHashCallsMultiSeq(barcodeData)
 
 
 ```
