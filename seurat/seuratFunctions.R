@@ -819,6 +819,12 @@ writeSummaryMetrics <- function(seuratObj, file) {
   write.table(df, file = file, quote = F, row.names = F, sep = '\t')
 }
 
+writeCellBarcodes <- function(seuratObj, file) {
+  df <- data.frame(CellBarcode = colnames(seuratObj))
+
+  write.table(df, file = file, quote = F, row.names = F, sep = ',', col.names = F)
+}
+
 saveDimRedux <- function(serObj, reductions=c("pca", "tsne", "umap"),
                                 file=NA, maxPCAcomps=10){
   
