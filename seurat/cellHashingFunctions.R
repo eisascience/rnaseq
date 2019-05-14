@@ -33,6 +33,15 @@ processCiteSeqCount <- function(bFile=NA, doRowFilter = T) {
     bData <- doCellFiltering(bData)
   } else {
     print('Row filtering will not be performed')
+    
+    toDrop <- rowSums(bData) == 0
+    if (sum(toDrop) > 0){
+      print(paste0('HTOs dropped due to zero counts in all cells: ', sum(toDrop)))
+      print(paste(rownames(bData)[toDrop], collapse = ', '))
+      bData <- bData[which(rowSums(bData) > 0), , drop = FALSE]
+      print(paste0('HTOs after filter: ', nrow(bData)))
+      print(paste(rownames(bData), collapse = ', '))
+    }
   }
   
   #repeat summary:
@@ -69,7 +78,7 @@ doRowFiltering <- function(bData, minRowSum = 5,
   if (toDrop > 0){
     print(paste0('HTOs dropped due to low total counts (', minRowSum, '): ', toDrop))
     print(paste(rownames(bData)[which(rowSums(bData) < minRowSum)], collapse = ', '))
-    bData <- bData[which(rowSums(bData) >= minRowSum),]
+    bData <- bData[which(rowSums(bData) >= minRowSum), , drop = FALSE]
     print(paste0('HTOs after filter: ', nrow(bData)))
     print(paste(rownames(bData), collapse = ', '))
   }
@@ -83,7 +92,7 @@ doRowFiltering <- function(bData, minRowSum = 5,
   if (toDrop > 0){
     print(paste0('HTOs dropped due to low row means (', minRowMean, '): ', toDrop))
     print(paste(rownames(bData)[which(rowMeans(bData) < minRowMean)], collapse = ', '))
-    bData <- bData[which(rowMeans(bData) >= minRowMean),]
+    bData <- bData[which(rowMeans(bData) >= minRowMean), , drop = FALSE]
     print(paste0('HTOs after filter: ', nrow(bData)))
     print(paste(rownames(bData), collapse = ', '))
   }
@@ -99,7 +108,7 @@ doRowFiltering <- function(bData, minRowSum = 5,
   if (sum(toDrop) > 0){
     print(paste0('HTOs dropped due to low max counts (', minRowMax, '): ', sum(toDrop)))
     print(paste(rownames(bData)[toDrop], collapse = ', '))
-    bData <- bData[!toDrop,]
+    bData <- bData[!toDrop, ,  drop = FALSE ]
     print(paste0('HTOs after filter: ', nrow(bData)))
     print(paste(rownames(bData), collapse = ', '))
   }
@@ -114,7 +123,7 @@ doRowFiltering <- function(bData, minRowSum = 5,
   if (sum(toDrop) > 0){
     print(paste0('HTOs dropped due to insufficient mean non-zero count (', minMeanNonZeroCount, '): ', sum(toDrop)))
     print(paste(rownames(bData)[toDrop], collapse = ', '))
-    bData <- bData[!toDrop,]
+    bData <- bData[!toDrop, , drop = FALSE ]
     print(paste0('HTOs after filter: ', nrow(bData)))
     print(paste(rownames(bData), collapse = ', '))
   }
@@ -205,7 +214,7 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   toDrop <- sum(colSums(bData) < minColSum)
   if (toDrop > 0){
     print(paste0('cells dropped due to low total counts per column (', minColSum, '): ', toDrop))
-    bData <- bData[,which(colSums(bData) >= minColSum)]
+    bData <- bData[,which(colSums(bData) >= minColSum), drop = FALSE]
     print(paste0('Final cell barcodes: ', ncol(bData)))
   }
   
@@ -218,7 +227,7 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   toDrop <- sum(cm < minColMax)
   if (toDrop > 0){
     print(paste0('cells dropped due to low max counts per column (', minColMax,'): ', toDrop))
-    bData <- bData[,(cm >= minColMax)]
+    bData <- bData[,(cm >= minColMax), drop = FALSE]
     print(paste0('Final cell barcodes: ', ncol(bData)))
   }
   
