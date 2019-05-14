@@ -206,9 +206,10 @@ inferThresholds <- function(data, dataLabel, minQuant = 0.05, plotFigs = T, find
   return(ret)
 }
 
-doCellFiltering <- function(bData, minQuant = 0.05){
+doCellFiltering <- function(bData, minQuant = 0.05, maxValueForColSumFilter = 5){
   thresholdsSum <- inferThresholds(colSums(bData), dataLabel = "Column Sums", minQuant = minQuant, findElbowMinY = 5000)
   minColSum <- thresholdsSum$ElbowThreshold
+  minColSum <- min(minColSum, maxValueForColSumFilter)
   
   #colsum filter
   toDrop <- sum(colSums(bData) < minColSum)
@@ -219,17 +220,17 @@ doCellFiltering <- function(bData, minQuant = 0.05){
   }
   
   #colmax filter
-  barcodeMatrix <- as.matrix(bData)
-  cm <- apply(barcodeMatrix, 2, max)
-  thresholdsMax <- inferThresholds(cm, dataLabel = "Column Max", minQuant = minQuant, findElbowMinY = 5000)
-  minColMax <- thresholdsMax$ElbowThreshold
+  #barcodeMatrix <- as.matrix(bData)
+  #cm <- apply(barcodeMatrix, 2, max)
+  #thresholdsMax <- inferThresholds(cm, dataLabel = "Column Max", minQuant = minQuant, findElbowMinY = 5000)
+  #minColMax <- thresholdsMax$ElbowThreshold
   
-  toDrop <- sum(cm < minColMax)
-  if (toDrop > 0){
-    print(paste0('cells dropped due to low max counts per column (', minColMax,'): ', toDrop))
-    bData <- bData[,(cm >= minColMax), drop = FALSE]
-    print(paste0('Final cell barcodes: ', ncol(bData)))
-  }
+  #toDrop <- sum(cm < minColMax)
+  #if (toDrop > 0){
+  #  print(paste0('cells dropped due to low max counts per column (', minColMax,'): ', toDrop))
+  #  bData <- bData[,(cm >= minColMax), drop = FALSE]
+  #  print(paste0('Final cell barcodes: ', ncol(bData)))
+  #}
   
   return(bData)
 }
