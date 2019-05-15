@@ -16,7 +16,7 @@ readAndFilter10xData <- function(dataDir, datasetName) {
   
   seuratObj <- createSeuratObj(seuratRawData, project = datasetName)
   printQcPlots(seuratObj)
-
+  
   return(seuratObj)  
 }
 
@@ -51,7 +51,7 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, empty
   
   # Making a plot.
   plot(br.out$rank, br.out$total+1, log="xy", xlab="Rank", ylab="Total")
-
+  
   o <- order(br.out$rank)
   lines(br.out$rank[o], br.out$fitted[o], col="red")
   abline(h=br.out$knee, col="dodgerblue", lty=2)
@@ -60,7 +60,7 @@ performEmptyDropletFiltering <- function(seuratRawData, fdrThreshold=0.01, empty
          legend=c("knee", "inflection"))
   
   e.out <- performEmptyDrops(seuratRawData, emptyDropNIters = emptyDropNIters, fdrThreshold = fdrThreshold)
-
+  
   toPlot <- e.out[is.finite(e.out$LogProb),]
   if (nrow(toPlot) > 0) {
     plot(toPlot$Total, -toPlot$LogProb, col=ifelse(toPlot$is.cell, "red", "black"), xlab="Total UMI count", ylab="-Log Probability")
@@ -207,26 +207,152 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   return(seuratObj)
 }
 
-appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA){
+downloadAndAppendTcrClonotypes <- function(seuratObject, outPath = '.'){
+  if (is.null(seuratObject[['BarcodePrefix']])){
+    stop('Seurat object lacks BarcodePrefix column')
+  }
+  
+  for (barcodePrefix in unique(unique(unlist(seuratObject[['BarcodePrefix']])))) {
+    print(paste0('Adding TCR clonotypes for prefix: ', barcodePrefix))
+    
+    vloupeId <- findMatchedVloupe(barcodePrefix)
+    if (is.na(vloupeId)){
+      stop(paste0('Unable to find VLoupe file for loupe file: ', barcodePrefix))
+    }
+    
+    clonotypeFile <- file.path(outPath, paste0(barcodePrefix, '_clonotypes.csv'))
+    downloadCellRangerClonotypes(vLoupeId = vloupeId, outFile = clonotypeFile, overwrite = T)
+    
+    appendTcrClonotypes(seuratObject, clonotypeFile, barcodePrefix)
+  }
+}
+
+appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA, barcodePrefix = NULL){
   tcr <- processAndAggregateTcrClonotypes(clonotypeFile)
   
-  origRows <- nrow(tcr)
-  tcr <- tcr[tcr$barcode %in% rownames(seuratObject),]
+  if (!is.null(barcodePrefix)){
+    tcr$barcode <- as.character(tcr$barcode)
+    tcr$barcode <- paste0(barcodePrefix, '_', tcr$barcode)
+    tcr$barcode <- as.factor(tcr$barcode)
+  }
   
+  origRows <- nrow(tcr)
+  
+  datasetSelect <- seuratObject$BarcodePrefix == barcodePrefix
+  gexBarcodes <- colnames(seuratObject)[datasetSelect]
+  
+  tcr <- tcr[tcr$barcode %in% gexBarcodes,]
   pct <- nrow(tcr) / origRows * 100
   
   print(paste0('Barcodes with clonotypes: ', origRows, ', intersecting with GEX data: ', nrow(tcr), " (", pct, "%)"))
   
-  merged <- merge(data.frame(barcode = colnames(seuratObj)), tcr, by = c('barcode'), all.x = T)
+  merged <- merge(data.frame(barcode = gexBarcodes), tcr, by = c('barcode'), all.x = T)
   rownames(merged) <- merged$barcode
   
+  # Check barcodes match before merge  
+  if (sum(merged$barcode != colnames(seuratObject)[datasetSelect]) > 0) {
+    stop('Seurat and HTO barcodes do not match after merge!')
+  }
+  
   for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
-    toAdd <- merged[[colName]]
-    names(toAdd) <- merged[[barcode]]
-    seuratObject[[colName]] <- toAdd
+    toAdd <- as.character(merged[[colName]])
+    names(toAdd) <- merged[['barcode']]
+    
+    if (!(colName %in% names(seuratObject@meta.data))) {
+      seuratObject[[colName]] <- c(NA)
+    }
+    
+    toUpdate <- as.character(seuratObject[[colName]])
+    toUpdate[datasetSelect] <- toAdd
+    seuratObject[[colName]] <- as.factor(toUpdate)
   }
   
   return(seuratObject)
+}
+
+findMatchedVloupe <- function(loupeDataId) {
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="readset/cdna/enrichedReadsetId",
+    colFilter=makeFilter(c("rowid", "EQUAL", loupeDataId)), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) != 1) {
+    return(NA)  
+  }
+  
+  tcrReadsetId <- rows[['readset_cdna_enrichedreadsetid']]
+  if (is.na(tcrReadsetId) || is.null(tcrReadsetId)) {
+    return(NA)
+  }
+  
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="rowid,",
+    colFilter=makeFilter(c("readset", "EQUAL", tcrReadsetId), c("category", "EQUAL", "10x VLoupe")), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) > 1){
+    rows <- rows[1]
+  }
+  
+  return(rows[['rowid']])
+}
+
+downloadCellRangerClonotypes <- function(vLoupeId, outFile, overwrite = T) {
+  #There should be a file named all_contig_annotations.csv in the same directory as the VLoupe file
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="rowid,workbook/workbookid,dataid/webdavurlrelative",
+    colFilter=makeFilter(c("rowid", "EQUAL", vLoupeId)), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) != 1) {
+    return(NA)  
+  }
+  
+  wb <- rows[['workbook_workbookid']]
+  if (is.na(wb) || is.null(wb)){
+    wb <- ''
+  }
+  
+  remotePath <- rows[['dataid_webdavurlrelative']]
+  remotePath <- paste0(dirname(remotePath), '/all_contig_annotations.csv')
+  
+  success <- labkey.webdav.get(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/",wb), 
+    remoteFilePath = remotePath,
+    overwrite = overwrite,
+    localFilePath = outFile
+  )
+  
+  if (!success | !file.exists(outFile)) {
+    return(NA)  
+  }
+  
+  return(outFile)
 }
 
 # Expects all_contig_annotations.csv from cellranger vdj    
@@ -250,21 +376,21 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
   )
   
   labelDf$LabelCol <- paste0(labelDf$clonename)
-  
+
   labelDf <- labelDf %>% 
     group_by(chain, cdr3) %>% 
     summarize(CloneName = paste(sort(unique(LabelCol)), collapse = ","))
   
   tcr <- merge(tcr, labelDf, by.x = c('chain', 'cdr3'), by.y = c('chain', 'cdr3'), all.x = TRUE, all.y = FALSE)
-  
+
   # Many TRDV genes can be used as either alpha or delta TCRs.  10x classifies and TRDV/TRAJ/TRAC clones as 'Multi'.  Re-classify these:
   tcr$chain[tcr$chain == 'Multi' & grepl(pattern = 'TRD', x = tcr$v_gene) & grepl(pattern = 'TRAJ', x = tcr$j_gene) & grepl(pattern = 'TRAC', x = tcr$c_gene)] <- c('TRA')
-  
+
   # Add chain-specific columns:
   tcr$ChainCDR3s <- paste0(tcr$chain, ':', tcr$cdr3)
   for (l in c('TRA', 'TRB', 'TRD', 'TRG')){
     tcr[[l]] <- c(NA)
-    tcr[[l]][tcr$chain == l] <- tcr$cdr3[tcr$chain == l]
+    tcr[[l]][tcr$chain == l] <- as.character(tcr$cdr3[tcr$chain == l])
   }
   
   # Summarize, grouping by barcode
@@ -277,13 +403,15 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
     TRG = paste(sort(unique(as.character(TRG))), collapse = ","),
     CloneNames = paste(sort(unique(CloneName)), collapse = ",")  #this is imprecise b/c we count a hit if we match any chain, but this is probably what we often want
   )
-  
+
   tcr$CloneNames <- sapply(strsplit(as.character(tcr$CloneNames), ",", fixed = TRUE), function(x) paste(naturalsort(unique(x)), collapse = ","))
   tcr$CloneNames[tcr$CloneNames == 'NA'] <- NA
-  
+
   tcr$barcode <- as.factor(tcr$barcode)
   for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
+    print(warnings())
     v <- tcr[[colName]]
+    print(warnings())
     v <- as.character(v)
     v[v == ''] <- NA
     
@@ -335,16 +463,16 @@ removeCellCycle <- function(seuratObj) {
   colnames(SeuratObjsCCPCA) <- paste(colnames(SeuratObjsCCPCA), "CellCycle", sep="_")
   
   seuratObj <- CellCycleScoring_SERIII(object = seuratObj, 
-                                s.features = s.genes, 
-                                g2m.features = g2m.genes, 
-                                set.ident = TRUE)
-    
+                                       s.features = s.genes, 
+                                       g2m.features = g2m.genes, 
+                                       set.ident = TRUE)
+  
   print(cowplot::plot_grid(plotlist = list(DimPlot(object = seuratObj, reduction = "pca", dims = c(1, 2)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(2, 3)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(3, 4)),
                                            DimPlot(object = seuratObj, reduction = "pca", dims = c(4, 5)) ))
   )
-
+  
   print("Regressing out S and G2M score ...")
   seuratObj <- ScaleData(object = seuratObj, vars.to.regress = c("S.Score", "G2M.Score"), display.progress = F, verbose = F)
   
@@ -395,7 +523,7 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
     seuratObj <- RunTSNE(object = seuratObj, dims.use = dimsToUse, check_duplicates = FALSE, perplexity = perplexity)
     seuratObj <- markStepRun(seuratObj, 'RunTSNE', saveFile)
   }
-
+  
   if (forceReCalc | !hasStepRun(seuratObj, 'RunUMAP')) {
     seuratObj <- RunUMAP(seuratObj,
                          dims = dimsToUse,
@@ -433,7 +561,7 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
   toPlot <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster)  %>% filter(avg_logFC > 0.5) %>% top_n(9, avg_logFC) %>% select(gene)
   
   write.table(toPlot, file = outFile, sep = '\t', row.names = F, quote = F)
-
+  
   if (nrow(toPlot) == 0) {  
     print('No significant markers were found')
   } else {
@@ -461,7 +589,7 @@ createExampleData <- function(nRow = 100, nCol = 10){
                  gene.symbol=gene.symb, barcodes=cell.ids)
   return(tmpdir)
 }
-                           
+
 CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident = FALSE) {
   enrich.name <- 'Cell Cycle'
   genes.list <- list('S.Score' = s.features, 'G2M.Score' = g2m.features)
@@ -494,14 +622,14 @@ CellCycleScoring_SERIII <- function (object, s.features, g2m.features, set.ident
   object$S.Score <- cc.scores$S.Score
   object$G2M.Score <- cc.scores$G2M.Score
   object$Phase <- cc.scores$Phase
-
+  
   if (set.ident) {
     object$old.or.idents <- Idents(object = object)
     Idents(object = object) <- cc.scores$Phase
   }
   return(object)
 }
-                           
+
 AddModuleScore_SERIII <- function(
   #using Seurat v2, AddModuleScore and converting to v3
   #this worked in v2 but their new version 3 breaks so this replaces it
@@ -584,7 +712,7 @@ AddModuleScore_SERIII <- function(
     nrow = length(x = ctrl.use),
     ncol = ncol(x = object@assays$RNA@data)
   )
-
+  
   for (i in 1:length(ctrl.use)) {
     genes.use <- ctrl.use[[i]]
     ctrl.scores[i, ] <- Matrix::colMeans(x = object@assays$RNA@data[genes.use, ])
@@ -603,7 +731,7 @@ AddModuleScore_SERIII <- function(
   rownames(x = genes.scores.use) <- paste0(enrich.name, 1:cluster.length)
   genes.scores.use <- as.data.frame(x = t(x = genes.scores.use))
   rownames(x = genes.scores.use) <- colnames(x = object@assays$RNA@data)
-
+  
   for (colName in colnames(genes.scores.use)) {
     object[[colName]] <- genes.scores.use[colnames(object),colName]
   }
@@ -815,18 +943,18 @@ findElbow <- function(y, plot = FALSE, ignore.concavity = FALSE, min.y = NA, min
 writeSummaryMetrics <- function(seuratObj, file) {
   df <- data.frame(Category = "Seurat", MetricName = "TotalCells", Value = ncol(seuratObj))
   df <- rbind(df, data.frame(Category = "Seurat", MetricName = "TotalFeatures", Value = nrow(seuratObj)))
-              
+  
   write.table(df, file = file, quote = F, row.names = F, sep = '\t')
 }
 
 writeCellBarcodes <- function(seuratObj, file) {
   df <- data.frame(CellBarcode = colnames(seuratObj))
-
+  
   write.table(df, file = file, quote = F, row.names = F, sep = ',', col.names = F)
 }
 
 saveDimRedux <- function(serObj, reductions=c("pca", "tsne", "umap"),
-                                file=NA, maxPCAcomps=10){
+                         file=NA, maxPCAcomps=10){
   
   if (is.na(file)){
     stop("file is required")
