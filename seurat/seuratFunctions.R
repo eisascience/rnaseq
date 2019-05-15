@@ -223,7 +223,7 @@ downloadAndAppendTcrClonotypes <- function(seuratObject, outPath = '.'){
     clonotypeFile <- file.path(outPath, paste0(barcodePrefix, '_clonotypes.csv'))
     downloadCellRangerClonotypes(vLoupeId = vloupeId, outFile = clonotypeFile, overwrite = T)
     
-    appendTcrClonotypes(seuratObject, clonotypeFile, barcodePrefix)
+    return(appendTcrClonotypes(seuratObject, clonotypeFile, barcodePrefix))
   }
 }
 
@@ -409,9 +409,7 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
 
   tcr$barcode <- as.factor(tcr$barcode)
   for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
-    print(warnings())
     v <- tcr[[colName]]
-    print(warnings())
     v <- as.character(v)
     v[v == ''] <- NA
     
