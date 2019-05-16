@@ -956,14 +956,14 @@ downloadAndAppendCellHashing <- function(seuratObject, outPath = '.'){
   }
   
   for (barcodePrefix in unique(unique(unlist(seuratObject[['BarcodePrefix']])))) {
-    print(paste0('Adding TCR clonotypes for prefix: ', barcodePrefix))
+    print(paste0('Adding cell hashing data for prefix: ', barcodePrefix))
     
     cellHashingId <- findMatchedCellHashing(barcodePrefix)
     if (is.na(cellHashingId)){
       stop(paste0('Unable to find cellHashing calls table file for prefix: ', barcodePrefix))
     }
     
-    callsFile <- file.path(outPath, paste0(barcodePrefix, '_clonotypes.csv'))
+    callsFile <- file.path(outPath, paste0(barcodePrefix, '_cellHashingCalls.csv'))
     downloadOutputFile(outputFileId = cellHashingId, outFile = callsFile, overwrite = T)
     if (!file.exists(callsFile)){
       stop(paste0('Unable to download calls table for prefix: ', barcodePrefix))
@@ -1019,7 +1019,7 @@ findMatchedCellHashing <- function(loupeDataId){
   return(rows[['rowid']])  
 }
 
-downloadOutputFile <- function(outputFileId, outFile) {
+downloadOutputFile <- function(outputFileId, outFile, overwrite = T) {
   #There should be a file named all_contig_annotations.csv in the same directory as the VLoupe file
   rows <- labkey.selectRows(
     baseUrl="https://prime-seq.ohsu.edu", 
