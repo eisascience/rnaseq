@@ -222,9 +222,14 @@ downloadAndAppendTcrClonotypes <- function(seuratObject, outPath = '.'){
     
     clonotypeFile <- file.path(outPath, paste0(barcodePrefix, '_clonotypes.csv'))
     downloadCellRangerClonotypes(vLoupeId = vloupeId, outFile = clonotypeFile, overwrite = T)
+    if (!file.exists(clonotypeFile)){
+      stop(paste0('Unable to download clonotype file for prefix: ', barcodePrefix))
+    }
     
-    return(appendTcrClonotypes(seuratObject, clonotypeFile, barcodePrefix))
+    seuratObject <- appendTcrClonotypes(seuratObject, clonotypeFile, barcodePrefix)
   }
+  
+  return(seuratObject)
 }
 
 appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA, barcodePrefix = NULL){

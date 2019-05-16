@@ -315,10 +315,10 @@ appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   #Hack until we figure this out upstream
   #TODO: Find discordant duplicates add as second col or convert to dublets or some 99 err
   barcodeCallTable <- unique(barcodeCallTable)
-  
+
   
   barcodeCallTable <- barcodeCallTable[barcodeCallTable$HTO != 'Negative',]
-  if(nrow(barcodeCallTable)==0) stop("Something is wrong, table became 0 rows")
+  if (nrow(barcodeCallTable)==0) stop("Something is wrong, table became 0 rows")
   
   print(paste0('Non-negative cell barcodes in HTO calls: ', nrow(barcodeCallTable)))
   
@@ -352,11 +352,14 @@ appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
     stop('Seurat and HTO barcodes do not match after merge!')
   }
   
-  seuratObj$HTO <- as.character(seuratObj$HTO)
-  seuratObj$HTO_Classification <- as.character(seuratObj$HTO_Classification)
+  HTO <- as.character(seuratObj$HTO)
+  HTO_Classification <- as.character(seuratObj$HTO_Classification)
   
-  seuratObj$HTO[seuratObj$BarcodePrefix == barcodePrefix] <- df$HTO
-  seuratObj$HTO_Classification[seuratObj$BarcodePrefix == barcodePrefix] <- df$HTO_Classification
+  HTO[datasetSelect] <- df$HTO
+  HTO_Classification[datasetSelect] <- df$HTO_Classification
+  
+  seuratObj$HTO <- as.factor(HTO)
+  seuratObj$HTO_Classification <- as.factor(HTO_Classification)
   
   return(seuratObj)
 }
@@ -945,4 +948,114 @@ generateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile, ba
   df$Value[is.na(df$Value)] <- 0
   
   write.table(df, file = outputFile, quote = F, row.names = F, sep = '\t')
+}
+
+downloadAndAppendCellHashing <- function(seuratObject, outPath = '.'){
+  if (is.null(seuratObject[['BarcodePrefix']])){
+    stop('Seurat object lacks BarcodePrefix column')
+  }
+  
+  for (barcodePrefix in unique(unique(unlist(seuratObject[['BarcodePrefix']])))) {
+    print(paste0('Adding TCR clonotypes for prefix: ', barcodePrefix))
+    
+    cellHashingId <- findMatchedCellHashing(barcodePrefix)
+    if (is.na(cellHashingId)){
+      stop(paste0('Unable to find cellHashing calls table file for prefix: ', barcodePrefix))
+    }
+    
+    callsFile <- file.path(outPath, paste0(barcodePrefix, '_clonotypes.csv'))
+    downloadOutputFile(outputFileId = cellHashingId, outFile = callsFile, overwrite = T)
+    if (!file.exists(callsFile)){
+      stop(paste0('Unable to download calls table for prefix: ', barcodePrefix))
+    }
+    
+    seuratObject <- appendCellHashing(seuratObj = seuratObject, barcodeCallFile = callsFile, barcodePrefix = barcodePrefix)
+  }
+  
+  return(seuratObject)
+}
+
+findMatchedCellHashing <- function(loupeDataId){
+  #Note: the seurat object gets associated with the GEX readset, so look based on this:
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="readset",
+    colFilter=makeFilter(c("rowid", "EQUAL", loupeDataId)), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) != 1) {
+    return(NA)  
+  }
+  
+  readset <- rows[['readset']]
+  if (is.na(readset) || is.null(readset)) {
+    return(NA)
+  }
+  
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="rowid,",
+    colFilter=makeFilter(c("readset", "EQUAL", readset), c("category", "EQUAL", "Seurat Cell Hashing Calls")), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) > 1){
+    rows <- rows[1]
+  }
+  
+  return(rows[['rowid']])  
+}
+
+downloadOutputFile <- function(outputFileId, outFile) {
+  #There should be a file named all_contig_annotations.csv in the same directory as the VLoupe file
+  rows <- labkey.selectRows(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/"), 
+    schemaName="sequenceanalysis", 
+    queryName="outputfiles", 
+    viewName="", 
+    colSort="-rowid", 
+    colSelect="rowid,workbook/workbookid,dataid/webdavurlrelative",
+    colFilter=makeFilter(c("rowid", "EQUAL", outputFileId)), 
+    containerFilter=NULL, 
+    colNameOpt="rname"
+  )
+  
+  if (nrow(rows) != 1) {
+    stop(paste0('More than one matching file found, this should not occur.  RowId: ', outputFileId))
+  }
+  
+  wb <- rows[['workbook_workbookid']]
+  if (is.na(wb) || is.null(wb)){
+    wb <- ''
+  }
+  
+  remotePath <- rows[['dataid_webdavurlrelative']]
+
+  success <- labkey.webdav.get(
+    baseUrl="https://prime-seq.ohsu.edu", 
+    folderPath=paste0("/Labs/Bimber/",wb), 
+    remoteFilePath = remotePath,
+    overwrite = overwrite,
+    localFilePath = outFile
+  )
+  
+  if (!success | !file.exists(outFile)) {
+    stop(paste0('failed to download file: ', remotePath))
+  }
+  
+  return(outFile)
 }
