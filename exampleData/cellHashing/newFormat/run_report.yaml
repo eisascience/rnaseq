@@ -1,0 +1,24 @@
+Date: 2019-05-17
+Running time: 13.38 seconds
+CITE-seq-Count Version: 1.4.2
+Reads processed: 100000
+Percentage mapped: 98
+Percentage unmapped: 2
+Uncorrected cells: 0
+Correction:
+	Cell barcodes collapsing threshold: 1
+	Cell barcodes corrected: 130
+	UMI collapsing threshold: 2
+	UMIs corrected: 18
+Run parameters:
+	Read1_filename: /home/groups/prime-seq/production/Labs/Bimber/267/@files/s_267_1_1.trim.crop.subsample2.fq.gz
+	Read2_filename: /home/groups/prime-seq/production/Labs/Bimber/267/@files/s_267_1_2.trim.crop.subsample2.fq.gz
+	Cell barcode:
+		First position: 1
+		Last position: 16
+	UMI barcode:
+		First position: 17
+		Last position: 26
+	Expected cells: 10000
+	Tags max errors: 2
+	Start trim: 0

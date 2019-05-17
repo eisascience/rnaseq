@@ -20,9 +20,15 @@ processCiteSeqCount <- function(bFile=NA, doRowFilter = T) {
     stop("No file set: change bFile")
   } 
     
-  bData <- read.table(bFile, sep = ',', header = T, row.names = 1)
-  bData <- bData[which(!(rownames(bData) %in% c('no_match', 'total_reads'))),]
-  print(paste0('Initial barcodes in HTO data: ', ncol(bData)))
+  if (dir.exists(bFile)) {
+    #CITE-seq-Count 1.4.2 and higher creates a folder
+    bData <- Read10X(bFile, gene.column=1)
+  } else {
+    # older versions create a CSV file
+    bData <- read.table(bFile, sep = ',', header = T, row.names = 1)
+    bData <- bData[which(!(rownames(bData) %in% c('no_match', 'total_reads'))),]
+    print(paste0('Initial barcodes in HTO data: ', ncol(bData)))
+  }
   
   bData <- doCellFiltering(bData)
   
