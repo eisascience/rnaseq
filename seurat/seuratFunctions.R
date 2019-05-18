@@ -6,7 +6,7 @@ library(naturalsort)
 library(DropletUtils)
 library(Matrix)
 library(ggplot2)
-
+library(cowplot)
 
 labkey.setDefaults(baseUrl = "https://prime-seq.ohsu.edu")
 
@@ -997,4 +997,8 @@ saveDimRedux <- function(serObj, reductions=c("pca", "tsne", "umap"),
   print("saving DimRedux")
   
   write.csv(tempDT, file = file, row.names=TRUE)
+}
+
+addTitleToMultiPlot <- function(plotGrid, title, relHeights = c(0.1, 1)) {
+  plot_grid(ggdraw() + draw_label(title), plotGrid, ncol = 1, rel_heights = relHeights)
 }
