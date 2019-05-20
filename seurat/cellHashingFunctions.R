@@ -23,8 +23,8 @@ processCiteSeqCount <- function(bFile=NA, doRowFilter = T) {
   if (dir.exists(bFile)) {
     #CITE-seq-Count 1.4.2 and higher creates a folder
     bData <- Read10X(bFile, gene.column=1)
-    bData <- bData[which(!(rownames(bData) %in% c('unmapped'))),]
-    bData <- as.matrix(bData, drop = F)
+    bData <- bData[which(!(rownames(bData) %in% c('unmapped'))), , drop = F]
+    bData <- as.matrix(bData)
   } else {
     # older versions create a CSV file
     bData <- read.table(bFile, sep = ',', header = T, row.names = 1)
