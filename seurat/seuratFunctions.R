@@ -111,23 +111,54 @@ markStepRun <- function(seuratObj, name, saveFile = NULL) {
   return(seuratObj)
 }
 
-mergeSeuratObjs <- function(seuratObjs, data){
-  seuratObj <- NULL
+mergeSeuratObjs <- function(seuratObjs, data, alignData = F){
   for (exptNum in names(data)) {
     print(paste0('adding expt: ', exptNum))
     prefix <- paste0(exptNum)
-    seuratObjs[[exptNum]] <- RenameCells(object = seuratObjs[[exptNum]], add.cell.id = prefix)
-    seuratObjs[[exptNum]][['BarcodePrefix']] <- c(prefix)
+    so <- seuratObjs[[exptNum]]
     
-    if (is.null(seuratObj)) {
-      seuratObj <- seuratObjs[[exptNum]]
+    if (!('BarcodePrefix' %in% names(so@meta.data))) {
+      so <- RenameCells(object = so, add.cell.id = prefix)
+      so[['BarcodePrefix']] <- c(prefix)
     } else {
-      seuratObj <- merge(x = seuratObj,
-                         y = seuratObjs[[exptNum]],
-                         project = outPrefix,
-                         do.normalize = F
-      )
+      print('Barcode prefix already added')
+    }
+    
+    if (alignData) {
+      if (!hasStepRun(so, 'NormalizeData')) {
+        print('Normalizing')
+        so <- NormalizeData(object = so, verbose = F)
+      } else {
+        print('Normalization performed')
+      }
       
+      if (!hasStepRun(so, 'FindVariableFeatures')) {
+        print('Finding variable features')
+        so <- FindVariableFeatures(object = so, verbose = F, selection.method = "vst", nfeatures = 2000)
+      } else {
+        print('FindVariableFeatures performed')
+      }
+    }
+    
+    seuratObjs[[exptNum]] <- so
+  }
+  
+  seuratObj <- NULL
+  if (alignData) {
+    anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:20, scale = F)
+    seuratObj <- IntegrateData(anchorset = anchors, dims = 1:20)
+    DefaultAssay(seuratObj) <- "integrated"
+  }
+  else {
+    for (exptNum in names(data)) {
+      if (is.null(seuratObj)) {
+        seuratObj <- seuratObjs[[exptNum]]
+      } else {
+        seuratObj <- merge(x = seuratObj,
+                           y = seuratObjs[[exptNum]],
+                           project = outPrefix,
+                           do.normalize = F)
+      }  
     }
     
     print('after merge')
@@ -139,7 +170,8 @@ mergeSeuratObjs <- function(seuratObjs, data){
 
 processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFilter = F,
                            nUMI.high = 20000, nGene.high = 3000, pMito.high = 0.15,
-                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, forceReCalc = F, variableGeneTable = NULL){
+                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, forceReCalc = F, 
+                           variableGeneTable = NULL, variableFeatureSelectionMethod = 'vst'){
   
   if (doCellFilter & (forceReCalc | !hasStepRun(seuratObj, 'FilterCells'))) {
     print("Filtering Cells...")
@@ -159,7 +191,7 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   }
   
   if (forceReCalc | !hasStepRun(seuratObj, 'FindVariableFeatures')) {
-    seuratObj <- FindVariableFeatures(object = seuratObj, selection.method = 'mean.var.plot', mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf), verbose = F)
+    seuratObj <- FindVariableFeatures(object = seuratObj, mean.cutoff = c(0.0125, 3), dispersion.cutoff = c(0.5, Inf), verbose = F, selection.method = variableFeatureSelectionMethod)
     seuratObj <- markStepRun(seuratObj, 'FindVariableFeatures', saveFile)
   }
   
@@ -583,12 +615,25 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
     for (test in testsToUse) {    
       print(paste0('Running using test: ', test))
       tMarkers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, verbose = F, test.use = test)
-      tMarkers$Test <- c(test)
-      tMarkers$cluster <- as.character(tMarkers$cluster)
-      if (is.na(seuratObj.markers)) {
-        seuratObj.markers <- tMarkers
+      if (nrow(tMarkers) == 0) {
+        print('No genes returned, skipping')
       } else {
-        seuratObj.markers <- rbind(seuratObj.markers, tMarkers)
+        tMarkers$test <- c(test)
+        tMarkers$cluster <- as.character(tMarkers$cluster)
+        
+        toBind <- data.frame(test = tMarkers$test, 
+                             cluster = tMarkers$cluster, 
+                             gene = tMarkers$gene,
+                             avg_logFC = tMarkers$avg_logFC,
+                             pct.1 = tMarkers$pct.1,
+                             pct.2 = tMarkers$pct.2,
+                             p_val_adj = tMarkers$p_val_adj
+                           )
+        if (all(is.na(seuratObj.markers))) {
+          seuratObj.markers <- toBind
+        } else {
+          seuratObj.markers <- rbind(seuratObj.markers, toBind)
+        }
       }
     }
     
@@ -605,7 +650,7 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
     print('No significant markers were found')
     return()  
   } else {
-    toWrite <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster, test) %>% filter(avg_logFC > 0.5) %>% top_n(numGenesToSave, avg_logFC)
+    toWrite <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% filter(avg_logFC > 0.5) %>% group_by(cluster, test) %>% top_n(numGenesToSave, avg_logFC)
     write.table(toWrite, file = outFile, sep = '\t', row.names = F, quote = F)
   
     if (nrow(toWrite) == 0) {  
@@ -613,8 +658,8 @@ findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = N
     } else {
       print(DimPlot(object = seuratObj, reduction = 'tsne'))
       
-      top10 <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster, test) %>% filter(avg_logFC > 0.5) %>% top_n(20, avg_logFC)
-      print(DoHeatmap(object = seuratObj, features = unique(top10$gene)))
+      topGene <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% filter(avg_logFC > 0.5) %>% group_by(cluster, test) %>% top_n(20, avg_logFC)
+      print(DoHeatmap(object = seuratObj, features = unique(topGene$gene)))
     }
   }
 }
