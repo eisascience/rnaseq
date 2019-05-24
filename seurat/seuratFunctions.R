@@ -124,7 +124,7 @@ mergeSeuratObjs <- function(seuratObjs, data, alignData = T){
       print('Barcode prefix already added')
     }
     
-    if (alignData) {
+    if (alignData && length(seuratObjs) > 1) {
       if (!hasStepRun(so, 'NormalizeData')) {
         print('Normalizing')
         so <- NormalizeData(object = so, verbose = F)
@@ -144,7 +144,7 @@ mergeSeuratObjs <- function(seuratObjs, data, alignData = T){
   }
   
   seuratObj <- NULL
-  if (alignData) {
+  if (alignData && length(seuratObjs) > 1) {
     anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:20, scale = T, verbose = T)
     seuratObj <- IntegrateData(anchorset = anchors, dims = 1:20)
     DefaultAssay(seuratObj) <- "integrated"
