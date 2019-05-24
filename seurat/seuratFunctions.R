@@ -251,12 +251,14 @@ appendTcrClonotypes <- function(seuratObject = NA, clonotypeFile = NA, barcodePr
   
   print(paste0('Barcodes with clonotypes: ', origRows, ', intersecting with GEX data: ', nrow(tcr), " (", pct, "%)"))
   
-  merged <- merge(data.frame(barcode = gexBarcodes), tcr, by = c('barcode'), all.x = T)
+  merged <- merge(data.frame(barcode = gexBarcodes, sortOrder = 1:length(gexBarcodes)), tcr, by = c('barcode'), all.x = T)
   rownames(merged) <- merged$barcode
+  merged <- arrange(merged, sortOrder)
+  merged <- merged[colnames(merged) != 'sortOrder']
   
   # Check barcodes match before merge  
   if (sum(merged$barcode != colnames(seuratObject)[datasetSelect]) > 0) {
-    stop('Seurat and HTO barcodes do not match after merge!')
+    stop(paste0('Seurat and TCR barcodes do not match after merge, total different: ', sum(merged$barcode != colnames(seuratObject)[datasetSelect])))
   }
   
   for (colName in colnames(tcr)[colnames(tcr) != 'barcode']) {
@@ -375,12 +377,12 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
     schemaName="tcrdb", 
     queryName="clones", 
     showHidden=TRUE,
-    colSelect=c('clonename','chain','cdr3','animals'),
+    colSelect=c('clonename','chain','cdr3','animals', 'displayname', 'vgene'),
     containerFilter=NULL,
     colNameOpt='rname'
   )
   
-  labelDf$LabelCol <- paste0(labelDf$clonename)
+  labelDf$LabelCol <- coalesce(labelDf$displayname, labelDf$clonename)
 
   labelDf <- labelDf %>% 
     group_by(chain, cdr3) %>% 
@@ -396,6 +398,10 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
   for (l in c('TRA', 'TRB', 'TRD', 'TRG')){
     tcr[[l]] <- c(NA)
     tcr[[l]][tcr$chain == l] <- as.character(tcr$cdr3[tcr$chain == l])
+    
+    target <- paste0(l, 'V')
+    tcr[[target]] <- c(NA)
+    tcr[[target]][tcr$chain == l] <- as.character(tcr$v_gene[tcr$chain == l])
   }
   
   # Summarize, grouping by barcode
@@ -406,8 +412,16 @@ processAndAggregateTcrClonotypes <- function(clonotypeFile){
     TRB = paste(sort(unique(as.character(TRB))), collapse = ","),
     TRD = paste(sort(unique(as.character(TRD))), collapse = ","),
     TRG = paste(sort(unique(as.character(TRG))), collapse = ","),
+    TRAV = paste(sort(unique(as.character(TRAV))), collapse = ","),
+    TRBV = paste(sort(unique(as.character(TRBV))), collapse = ","),
+    TRDV = paste(sort(unique(as.character(TRDV))), collapse = ","),
+    TRGV = paste(sort(unique(as.character(TRGV))), collapse = ","),
+    
     CloneNames = paste(sort(unique(CloneName)), collapse = ",")  #this is imprecise b/c we count a hit if we match any chain, but this is probably what we often want
   )
+  
+  # Note: we should attempt to produce a more specfic call, assuming we have data from multiple chains
+  # The intent of this was to allow a A- or B-only hit to produce a call, but if we have both A/B, take their intersect.
 
   tcr$CloneNames <- sapply(strsplit(as.character(tcr$CloneNames), ",", fixed = TRUE), function(x) paste(naturalsort(unique(x)), collapse = ","))
   tcr$CloneNames[tcr$CloneNames == 'NA'] <- NA
@@ -1000,5 +1014,5 @@ saveDimRedux <- function(serObj, reductions=c("pca", "tsne", "umap"),
 }
 
 addTitleToMultiPlot <- function(plotGrid, title, relHeights = c(0.1, 1)) {
-  plot_grid(ggdraw() + draw_label(title), plotGrid, ncol = 1, rel_heights = relHeights)
+  return(plot_grid(ggdraw() + draw_label(title), plotGrid, ncol = 1, rel_heights = relHeights))
 }

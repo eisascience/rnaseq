@@ -311,6 +311,7 @@ generateCellHashCallsSeurat <- function(barcodeData) {
 }
 
 appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) {
+  initialCells <- ncol(seuratObj)
   print(paste0('Initial cell barcodes in GEX data: ', ncol(seuratObj)))
   
   if(!file.exists(barcodeCallFile)) stop("Barcode File Not found")
@@ -318,6 +319,9 @@ appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   barcodeCallTable <- read.table(barcodeCallFile, sep = '\t', header = T)
   if (!is.null(barcodePrefix)) {
     barcodeCallTable$CellBarcode <- paste0(barcodePrefix, '_', barcodeCallTable$CellBarcode)
+    
+    initialCells <- sum(seuratObj$BarcodePrefix == barcodePrefix)
+    print(paste0('Initial cell barcodes in GEX data for prefix: ', initialCells))
   }
   
   #Hack until we figure this out upstream
@@ -341,8 +345,11 @@ appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   }
   
   datasetSelect <- seuratObj$BarcodePrefix == barcodePrefix
-  df <- data.table(CellBarcode = colnames(seuratObj)[datasetSelect])
+  df <- data.frame(CellBarcode = colnames(seuratObj)[datasetSelect])
+  df$sortOrder = 1:nrow(df)
   df <- merge(df, barcodeCallTable, all.x = T, all.y = F, by = c('CellBarcode'))
+  df <- arrange(df, sortOrder)
+  df <- df[names(df) != 'sortOrder']
   
   if (sum(datasetSelect) != nrow(df)) {
     stop('Length of data select and df do not match!')
@@ -357,7 +364,7 @@ appendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 
   # Check barcodes match before merge  
   if (sum(df$cellBarcode != colnames(seuratObj)[seuratObj$BarcodePrefix == barcodePrefix]) > 0) {
-    stop('Seurat and HTO barcodes do not match after merge!')
+    stop(paste0('Seurat and HTO barcodes do not match after merge, differences: ', sum(df$cellBarcode != colnames(seuratObj)[seuratObj$BarcodePrefix == barcodePrefix])))
   }
   
   HTO <- as.character(seuratObj$HTO)
