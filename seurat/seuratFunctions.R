@@ -111,7 +111,7 @@ markStepRun <- function(seuratObj, name, saveFile = NULL) {
   return(seuratObj)
 }
 
-mergeSeuratObjs <- function(seuratObjs, data, alignData = T){
+mergeSeuratObjs <- function(seuratObjs, data, alignData = T, MaxCCAspaceDim = 20, MaxPCs2Weight = 20){
   for (exptNum in names(data)) {
     print(paste0('adding expt: ', exptNum))
     prefix <- paste0(exptNum)
@@ -145,8 +145,10 @@ mergeSeuratObjs <- function(seuratObjs, data, alignData = T){
   
   seuratObj <- NULL
   if (alignData && length(seuratObjs) > 1) {
-    anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:20, scale = T, verbose = T)
-    seuratObj <- IntegrateData(anchorset = anchors, dims = 1:20)
+    # dims here means : Which dimensions to use from the CCA to specify the neighbor search space
+    anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:MaxCCAspaceDim, scale = T, verbose = T)
+    # dims here means : #Number of PCs to use in the weighting procedure
+    seuratObj <- IntegrateData(anchorset = anchors, dims = 1:MaxPCs2Weight) 
     DefaultAssay(seuratObj) <- "integrated"
   }
   else {
