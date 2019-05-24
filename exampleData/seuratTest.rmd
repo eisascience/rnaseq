@@ -77,7 +77,7 @@ seuratObj
 ```{r}
 
 
-seuratObj <- processSeurat1(seuratObj, doCellCycle = T)
+seuratObj <- processSeurat1(seuratObj, doCellCycle = T, variableGeneTable = 'variableGenes.txt')
 
 
 ```

@@ -139,7 +139,7 @@ mergeSeuratObjs <- function(seuratObjs, data){
 
 processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFilter = F,
                            nUMI.high = 20000, nGene.high = 3000, pMito.high = 0.15,
-                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, forceReCalc = F){
+                           nUMI.low = 0.99, nGene.low = 200, pMito.low = -Inf, forceReCalc = F, variableGeneTable = NULL){
   
   if (doCellFilter & (forceReCalc | !hasStepRun(seuratObj, 'FilterCells'))) {
     print("Filtering Cells...")
@@ -169,7 +169,13 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
   }
   
   if (forceReCalc | !hasStepRun(seuratObj, 'RunPCA')) {
-    seuratObj <- RunPCA(object = seuratObj, features = VariableFeatures(object = seuratObj), verbose = F)
+    vg <- VariableFeatures(object = seuratObj)
+    print(paste0('Total variable genes: ', length(vg)))
+    if (!is.null(variableGeneTable)){
+      write.table(sort(vg), file = variableGeneTable, sep = '\t', row.names = F, quote = F, col.names = F)
+    }
+    
+    seuratObj <- RunPCA(object = seuratObj, features = vg, verbose = F)
     seuratObj <- markStepRun(seuratObj, 'RunPCA')
   }
   
@@ -564,31 +570,53 @@ findClustersAndDimRedux <- function(seuratObj, dimsToUse = NULL, saveFile = NULL
   return(seuratObj)
 }
 
-findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = NULL) {
+findMarkers <- function(seuratObj, resolutionToUse, outFile, saveFileMarkers = NULL, 
+                        testsToUse = c('wilcox', 'bimod', 'roc', 't', 'negbinom', 'poisson', 'LR', 'MAST', 'DESeq2'),
+                        numGenesToSave = 20) {
   Idents(seuratObj) <- seuratObj[[paste0('ClusterNames_',resolutionToUse)]]
   
   if (file.exists(saveFileMarkers)) {
     print('resuming from file')
     seuratObj.markers <- readRDS(saveFileMarkers)
   } else {
-    seuratObj.markers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, verbose = F)
+    seuratObj.markers <- NA
+    for (test in testsToUse) {    
+      print(paste0('Running using test: ', test))
+      tMarkers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, verbose = F, test.use = test)
+      tMarkers$Test <- c(test)
+      tMarkers$cluster <- as.character(tMarkers$cluster)
+      if (is.na(seuratObj.markers)) {
+        seuratObj.markers <- tMarkers
+      } else {
+        seuratObj.markers <- rbind(seuratObj.markers, tMarkers)
+      }
+    }
+    
+    if (!('cluster' %in% names(seuratObj.markers))) {
+      print('cluster column not found!')
+    } else {
+      seuratObj.markers$cluster <- as.factor(seuratObj.markers$cluster)
+    }
+    
     saveRDS(seuratObj.markers, file = saveFileMarkers)
   }
   
-  toPlot <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster)  %>% filter(avg_logFC > 0.5) %>% top_n(9, avg_logFC) %>% select(gene)
-  
-  write.table(toPlot, file = outFile, sep = '\t', row.names = F, quote = F)
-  
-  if (nrow(toPlot) == 0) {  
+  if (nrow(seuratObj.markers) == 0) {
     print('No significant markers were found')
+    return()  
   } else {
-    print(DimPlot(object = seuratObj, reduction = 'tsne'))
-    
-    top10 <- seuratObj.markers %>% group_by(cluster) %>% top_n(10, avg_logFC)
-    print(DoHeatmap(object = seuratObj, features = top10$gene))
-  }
+    toWrite <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster, test) %>% filter(avg_logFC > 0.5) %>% top_n(numGenesToSave, avg_logFC)
+    write.table(toWrite, file = outFile, sep = '\t', row.names = F, quote = F)
   
-  return(toPlot)
+    if (nrow(toWrite) == 0) {  
+      print('No significant markers were found')
+    } else {
+      print(DimPlot(object = seuratObj, reduction = 'tsne'))
+      
+      top10 <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster, test) %>% filter(avg_logFC > 0.5) %>% top_n(20, avg_logFC)
+      print(DoHeatmap(object = seuratObj, features = unique(top10$gene)))
+    }
+  }
 }
 
 createExampleData <- function(nRow = 100, nCol = 10){
@@ -702,7 +730,7 @@ AddModuleScore_SERIII <- function(
   if (is.null(x = genes.pool)) {
     genes.pool = rownames(object)
   }
-  data.avg <- Matrix::rowMeans(object@assays$RNA@data[genes.pool, ])
+  data.avg <- Matrix::rowMeans(object@assays[[DefaultAssay(object)]]@data[genes.pool, ])
   data.avg <- data.avg[order(data.avg)]
   data.cut <- as.numeric(x = Hmisc::cut2(
     x = data.avg,
@@ -727,27 +755,27 @@ AddModuleScore_SERIII <- function(
   ctrl.scores <- matrix(
     data = numeric(length = 1L),
     nrow = length(x = ctrl.use),
-    ncol = ncol(x = object@assays$RNA@data)
+    ncol = ncol(x = object@assays[[DefaultAssay(object)]]@data)
   )
   
   for (i in 1:length(ctrl.use)) {
     genes.use <- ctrl.use[[i]]
-    ctrl.scores[i, ] <- Matrix::colMeans(x = object@assays$RNA@data[genes.use, ])
+    ctrl.scores[i, ] <- Matrix::colMeans(x = object@assays[[DefaultAssay(object)]]@data[genes.use, ])
   }
   genes.scores <- matrix(
     data = numeric(length = 1L),
     nrow = cluster.length,
-    ncol = ncol(x = object@assays$RNA@data)
+    ncol = ncol(x = object@assays[[DefaultAssay(object)]]@data)
   )
   for (i in 1:cluster.length) {
     genes.use <- genes.list[[i]]
-    data.use <- object@assays$RNA@data[genes.use, , drop = FALSE]
+    data.use <- object@assays[[DefaultAssay(object)]]@data[genes.use, , drop = FALSE]
     genes.scores[i, ] <- Matrix::colMeans(x = data.use)
   }
   genes.scores.use <- genes.scores - ctrl.scores
   rownames(x = genes.scores.use) <- paste0(enrich.name, 1:cluster.length)
   genes.scores.use <- as.data.frame(x = t(x = genes.scores.use))
-  rownames(x = genes.scores.use) <- colnames(x = object@assays$RNA@data)
+  rownames(x = genes.scores.use) <- colnames(x = object@assays[[DefaultAssay(object)]]@data)
   
   for (colName in colnames(genes.scores.use)) {
     object[[colName]] <- genes.scores.use[colnames(object),colName]
