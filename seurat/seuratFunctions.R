@@ -111,7 +111,7 @@ markStepRun <- function(seuratObj, name, saveFile = NULL) {
   return(seuratObj)
 }
 
-mergeSeuratObjs <- function(seuratObjs, data, alignData = F){
+mergeSeuratObjs <- function(seuratObjs, data, alignData = T){
   for (exptNum in names(data)) {
     print(paste0('adding expt: ', exptNum))
     prefix <- paste0(exptNum)
@@ -145,7 +145,7 @@ mergeSeuratObjs <- function(seuratObjs, data, alignData = F){
   
   seuratObj <- NULL
   if (alignData) {
-    anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:20, scale = F)
+    anchors <- FindIntegrationAnchors(object.list = seuratObjs, dims = 1:20, scale = T, verbose = T)
     seuratObj <- IntegrateData(anchorset = anchors, dims = 1:20)
     DefaultAssay(seuratObj) <- "integrated"
   }
