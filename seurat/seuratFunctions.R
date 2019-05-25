@@ -187,7 +187,8 @@ processSeurat1 <- function(seuratObj, saveFile = NULL, doCellCycle = T, doCellFi
     seuratObj <- markStepRun(seuratObj, 'FilterCells')
   }
   
-  if (forceReCalc | !hasStepRun(seuratObj, 'NormalizeData')) {
+  #other assays like integrated etc do not need normalization
+ if ((forceReCalc | !hasStepRun(seuratObj, 'NormalizeData')) & DefaultAssay(seuratObj)=="RNA") {
     seuratObj <- NormalizeData(object = seuratObj, normalization.method = "LogNormalize", verbose = F)
     seuratObj <- markStepRun(seuratObj, 'NormalizeData', saveFile)
   }
