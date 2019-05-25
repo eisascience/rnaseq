@@ -333,30 +333,6 @@ predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rd
         ClassifiersLS$SeuratGeneScore[[tempName]] <- list()
 
 
-        for(SERObj.path in SERObjects_processed.paths){
-
-      print(basename(SERObj.path))
-      tempSER <- readRDS(SERObj.path)
-      #tempSER <- SeuratObjs
-
-
-
-      tempName <- basename(gsub("_", "", gsub("-", "_", gsub("\\.", "", gsub("_SeuratObj.rds_proc.rds", "", SERObj.path)))))
-
-
-      # ModuleScoreGeneLists <- CTL_Immune_GeneList(QuickGO.path="/Volumes/Maggie/Work/OHSU/Eisa/R/scRNASeq/data/QuickGO")
-
-
-
-
-
-      if(ModuleScoreGeneListClassify){
-
-        print("Starting Seurat's AddModule Scoring for GeneSets")
-        #tempLSScores <- list()
-        ClassifiersLS$SeuratGeneScore[[tempName]] <- list()
-
-
         for(GeneList in names(ModuleScoreGeneLists)){
           # GeneList = names(ModuleScoreGeneLists)[1]
           print(GeneList)
@@ -433,8 +409,6 @@ predict_SERIII <- function(ProcSERobj.path = NULL, PatternOfProcSERobj="_proc.rd
 
         #Seurate gene score (SGS)
         SGS.DF <- as.data.frame(ClassifiersLS$SeuratGeneScore[[tempName]])
-        
-        #this fixes the issue with multiple unnecessary columns of IDs
         SGS.DF <- SGS.DF[,!grepl(".cID", colnames(SGS.DF))]
         SGS.DF$cID <- rownames(SGS.DF)
 
